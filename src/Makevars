@@ -1,0 +1,11 @@
+## PRIMME 3.2.3, vendored under primme/. Compiled without single precision,
+## which R does not ship, and with the simple LAPACK drivers (USE_XHEEV,
+## USE_XHEGV) rather than the expert ones R lacks. zhegv_ is mapped onto
+## lp_zhegv in lapack_ext.c because R does not ship zhegv either.
+PRIMME_DEFS = -DF77UNDERSCORE -DPRIMME_WITHOUT_FLOAT -DUSE_XHEEV -DUSE_XHEGV -Dzhegv_=lp_zhegv -DNDEBUG
+PKG_CPPFLAGS = -Iprimme/include -Iprimme/src/include $(PRIMME_DEFS)
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+PRIMME_SOURCES = primme/src/eigs/auxiliary_eigs.c primme/src/eigs/auxiliary_eigs_normal.c primme/src/eigs/convergence.c primme/src/eigs/correction.c primme/src/eigs/factorize.c primme/src/eigs/init.c primme/src/eigs/inner_solve.c primme/src/eigs/main_iter.c primme/src/eigs/ortho.c primme/src/eigs/primme_c.c primme/src/eigs/primme_interface.c primme/src/eigs/restart.c primme/src/eigs/solve_projection.c primme/src/eigs/update_W.c primme/src/eigs/update_projection.c primme/src/linalg/auxiliary.c primme/src/linalg/blaslapack.c primme/src/linalg/cublas_wrapper.c primme/src/linalg/magma_wrapper.c primme/src/linalg/memman.c primme/src/linalg/wtime.c primme/src/svds/primme_svds_c.c primme/src/svds/primme_svds_interface.c 
+
+OBJECTS = init.o bindings.o lapack_ext.o $(PRIMME_SOURCES:.c=.o)

@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+*.o
+*.so
+*.dll
+linop.primme.Rcheck/
+linop.primme_*.tar.gz

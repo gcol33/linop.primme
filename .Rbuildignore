@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^dev_notes$
+^CLAUDE\.md$
+\.o$
+\.dll$
+\.so$

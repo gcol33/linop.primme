@@ -1,0 +1,4 @@
+useDynLib(linop.primme, .registration = TRUE)
+export(primme_eigsh)
+export(primme_svds)
+export(primme_engine)
