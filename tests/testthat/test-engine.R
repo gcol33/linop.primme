@@ -11,7 +11,7 @@ random_unitary <- function(m, seed) {
 test_that("primme_engine reports the vendored version and the contract", {
   e <- primme_engine()
   expect_identical(e$engine_version, "3.2.3")
-  expect_identical(e$contract_version, "1.0")
+  expect_identical(e$contract_version, "1.1")
 })
 
 test_that("real hermitian: every target reaches the closed-form spectrum", {
@@ -133,4 +133,77 @@ test_that("the default preset returns the same vectors on every run", {
   s <- lapply(1:3, function(i) primme_svds(ap, 60, 40, 3, block = 3L))
   expect_identical(s[[2]]$u, s[[1]]$u)
   expect_identical(s[[3]]$v, s[[1]]$v)
+})
+
+test_that("the caller's convergence test decides, measured on another operator", {
+  ## Shift-and-invert: PRIMME iterates on (L - I)^-1, and its residual there bounds
+  ## the residual on L only by ||L - I|| times it. The test measures on L instead.
+  n <- 60
+  L <- 2 * diag(n); L[cbind(1:(n - 1), 2:n)] <- -1; L[cbind(2:n, 1:(n - 1))] <- -1
+  S <- solve(L - diag(n))
+  tol <- 1e-10
+  seen <- 0L
+  conv <- function(value, x, rnorm, anorm) {
+    if (is.null(x)) return(FALSE)
+    seen <<- seen + 1L
+    Lx <- L %*% x
+    mu <- sum(x * Lx) / sum(x^2)
+    sqrt(sum((Lx - mu * x)^2)) / sqrt(sum(x^2)) <= tol * abs(mu)
+  }
+  f <- primme_eigsh(function(X) S %*% X, n, 3, which = "LM", tol = tol, block = 3L,
+                    convtest = conv)
+  expect_identical(f$info, 0L)
+  expect_gt(seen, 0L)
+  mu <- colSums(f$vectors * (L %*% f$vectors)) / colSums(f$vectors^2)
+  rel <- sqrt(colSums((L %*% f$vectors - f$vectors %*% diag(mu))^2)) /
+    (abs(mu) * sqrt(colSums(f$vectors^2)))
+  expect_lte(max(rel), tol)
+})
+
+test_that("a convergence test that never accepts runs out the budget", {
+  n <- 100
+  f <- primme_eigsh(lap_apply(n), n, 2, which = "SA", maxit = 60,
+                    convtest = function(value, x, rnorm, anorm) FALSE)
+  expect_identical(f$info, -3L)
+})
+
+test_that("a convergence test that errors or answers otherwise is refused", {
+  n <- 30
+  expect_error(primme_eigsh(lap_apply(n), n, 2,
+                            convtest = function(value, x, rnorm, anorm) stop("no verdict")),
+               "no verdict")
+  expect_error(primme_eigsh(lap_apply(n), n, 2,
+                            convtest = function(value, x, rnorm, anorm) NA),
+               "TRUE or FALSE")
+  expect_error(primme_eigsh(lap_apply(n), n, 2, convtest = "yes"), "function or NULL")
+})
+
+test_that("the caller's convergence test decides for singular triplets", {
+  set.seed(3)
+  A <- qr.Q(qr(matrix(rnorm(40 * 30), 40))) %*% diag(seq(10, 0.1, length.out = 30)) %*%
+    t(qr.Q(qr(matrix(rnorm(30 * 30), 30))))
+  ap <- function(X, trans) if (trans) crossprod(A, X) else A %*% X
+  tol <- 1e-10
+  sides <- character(0)
+  conv <- function(value, u, v, rnorm, anorm) {
+    if (is.null(u) && is.null(v)) return(FALSE)
+    sides <<- union(sides, c(if (!is.null(u)) "u", if (!is.null(v)) "v"))
+    if (is.null(u)) u <- A %*% v
+    if (is.null(v)) v <- crossprod(A, u)
+    u <- u / sqrt(sum(u^2)); v <- v / sqrt(sum(v^2))
+    d <- sum(u * (A %*% v))
+    r <- sqrt(sum((A %*% v - d * u)^2) + sum((crossprod(A, u) - d * v)^2)) / sqrt(2)
+    r <= tol * abs(d)
+  }
+  f <- primme_svds(ap, 40, 30, 3, which = "SM", tol = tol, block = 3L, convtest = conv)
+  expect_identical(f$info, 0L)
+  expect_true(all(c("u", "v") %in% sides))
+  U <- f$u; V <- f$v
+  d <- colSums(U * (A %*% V))
+  r <- sqrt(colSums((A %*% V - U %*% diag(d))^2) + colSums((crossprod(A, U) - V %*% diag(d))^2)) /
+    sqrt(2)
+  expect_lte(max(r / abs(d)), tol)
+
+  never <- primme_svds(ap, 40, 30, 2, maxit = 80, convtest = function(...) FALSE)
+  expect_true(never$info %in% c(-103L, -203L))
 })

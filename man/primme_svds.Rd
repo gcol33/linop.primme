@@ -18,7 +18,8 @@ primme_svds(
   complex = FALSE,
   seed = 1L,
   norm = 0,
-  preset = "PRIMME_DEFAULT_MIN_MATVECS"
+  preset = "PRIMME_DEFAULT_MIN_MATVECS",
+  convtest = NULL
 )
 }
 \arguments{
@@ -58,6 +59,13 @@ PRIMME to estimate it.}
 
 \item{preset}{The PRIMME preset method for both stages of the singular value
 solver; see [primme_eigsh()].}
+
+\item{convtest}{`NULL` for PRIMME's own convergence test, or a function
+`(value, u, v, rnorm, anorm)` returning `TRUE` when the triplet is
+converged. It receives PRIMME's singular value, the left and right
+vectors or `NULL` for a side PRIMME does not pass (its first stage, on the
+normal equations, passes one side), PRIMME's residual norm and its
+estimate of `||A||`.}
 }
 \value{
 A list with `d`, `u`, `v`, `resNorms`, `nconv`, `info`, the overall

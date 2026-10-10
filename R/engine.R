@@ -5,7 +5,7 @@
 ## the operator, the certificate and the choice between engines are linop's.
 
 PRIMME_VERSION <- "3.2.3"
-CONTRACT_VERSION <- "1.0"
+CONTRACT_VERSION <- "1.1"
 
 EIGSH_TARGET <- c(LA = 0L, SA = 1L, LM = 2L, SM = 3L)
 SVDS_TARGET <- c(LM = 0L, SM = 1L)
@@ -46,6 +46,12 @@ check_count <- function(x, what) {
     stop(sprintf("%s must be a positive whole number", what), call. = FALSE)
   }
   as.integer(x)
+}
+
+check_convtest <- function(convtest) {
+  if (!is.null(convtest) && !is.function(convtest)) {
+    stop("convtest must be a function or NULL", call. = FALSE)
+  }
 }
 
 opt_count <- function(x, what) if (is.null(x)) NULL else check_count(x, what)
@@ -89,6 +95,13 @@ opt_flag <- function(x, what) {
 #' @param norm An estimate of `||A||` for the convergence test, or `0` for
 #'   PRIMME to estimate it.
 #' @param floor `c` in the arithmetic floor of the convergence test.
+#' @param convtest `NULL` for the convergence test described under `tol`, or a
+#'   function `(value, x, rnorm, anorm)` returning `TRUE` when the pair is
+#'   converged. It receives PRIMME's Ritz value, the unit Ritz vector or `NULL`
+#'   where PRIMME passes none, PRIMME's residual norm on the operator `apply`
+#'   applies, and the estimate of that operator's norm. A caller iterating on a
+#'   transformed operator, such as a shift-and-invert, measures the pair on the
+#'   operator it wants here.
 #' @param preset The name of a PRIMME preset method, such as
 #'   `"PRIMME_DEFAULT_MIN_MATVECS"` (GD+k), `"PRIMME_DEFAULT_MIN_TIME"`
 #'   (JDQMR), `"PRIMME_Arnoldi"` or `"PRIMME_DYNAMIC"`. The default is GD+k
@@ -108,10 +121,12 @@ opt_flag <- function(x, what) {
 primme_eigsh <- function(apply, n, k, which = "LA", tol = 1e-10, maxit = 10000L,
                          ncv = NULL, min_restart = NULL, block = NULL,
                          locking = NULL, v0 = NULL, complex = FALSE, seed = 1L,
-                         norm = 0, floor = 4, preset = "PRIMME_DEFAULT_MIN_MATVECS") {
+                         norm = 0, floor = 4, preset = "PRIMME_DEFAULT_MIN_MATVECS",
+                         convtest = NULL) {
   if (!is.function(apply)) stop("apply must be a function", call. = FALSE)
   n <- check_count(n, "n"); k <- check_count(k, "k")
   if (k > n) stop("k cannot exceed n", call. = FALSE)
+  check_convtest(convtest)
   if (!which %in% names(EIGSH_TARGET)) {
     stop("which is one of LA, SA, LM, SM", call. = FALSE)
   }
@@ -126,7 +141,7 @@ primme_eigsh <- function(apply, n, k, which = "LA", tol = 1e-10, maxit = 10000L,
         opt_count(block, "block"), opt_flag(locking, "locking"),
         as.double(check_count(maxit, "maxit")),
         v0, isTRUE(complex), as.integer(seed), as.double(norm), as.double(floor),
-        as.character(preset))
+        as.character(preset), convtest)
 }
 
 #' A few singular triplets of an operator
@@ -141,6 +156,12 @@ primme_eigsh <- function(apply, n, k, which = "LA", tol = 1e-10, maxit = 10000L,
 #' @param which `"LM"` (largest) or `"SM"` (smallest).
 #' @param preset The PRIMME preset method for both stages of the singular value
 #'   solver; see [primme_eigsh()].
+#' @param convtest `NULL` for PRIMME's own convergence test, or a function
+#'   `(value, u, v, rnorm, anorm)` returning `TRUE` when the triplet is
+#'   converged. It receives PRIMME's singular value, the left and right
+#'   vectors or `NULL` for a side PRIMME does not pass (its first stage, on the
+#'   normal equations, passes one side), PRIMME's residual norm and its
+#'   estimate of `||A||`.
 #' @inheritParams primme_eigsh
 #' @return A list with `d`, `u`, `v`, `resNorms`, `nconv`, `info`, the overall
 #'   `stats` and those of each of PRIMME's two stages, and `params`. PRIMME
@@ -156,15 +177,16 @@ primme_eigsh <- function(apply, n, k, which = "LA", tol = 1e-10, maxit = 10000L,
 primme_svds <- function(apply, m, n, k, which = "LM", tol = 1e-10,
                         maxit = 10000L, ncv = NULL, block = NULL, locking = NULL,
                         complex = FALSE, seed = 1L, norm = 0,
-                        preset = "PRIMME_DEFAULT_MIN_MATVECS") {
+                        preset = "PRIMME_DEFAULT_MIN_MATVECS", convtest = NULL) {
   if (!is.function(apply)) stop("apply must be a function", call. = FALSE)
   m <- check_count(m, "m"); n <- check_count(n, "n"); k <- check_count(k, "k")
   if (k > min(m, n)) stop("k cannot exceed min(m, n)", call. = FALSE)
   if (!which %in% names(SVDS_TARGET)) stop("which is LM or SM", call. = FALSE)
+  check_convtest(convtest)
   .Call(lp_svds, block_apply(apply, complex), environment(),
         as.double(m), as.double(n), k, SVDS_TARGET[[which]], as.double(tol),
         opt_count(ncv, "ncv"), opt_count(block, "block"),
         opt_flag(locking, "locking"),
         as.double(check_count(maxit, "maxit")), isTRUE(complex),
-        as.integer(seed), as.double(norm), as.character(preset))
+        as.integer(seed), as.double(norm), as.character(preset), convtest)
 }

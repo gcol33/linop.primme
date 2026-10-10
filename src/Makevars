@@ -2,7 +2,15 @@
 ## which R does not ship, and with the simple LAPACK drivers (USE_XHEEV,
 ## USE_XHEGV) rather than the expert ones R lacks. zhegv_ is mapped onto
 ## lp_zhegv in lapack_ext.c because R does not ship zhegv either.
-PRIMME_DEFS = -DF77UNDERSCORE -DPRIMME_WITHOUT_FLOAT -DUSE_XHEEV -DUSE_XHEGV -Dzhegv_=lp_zhegv -DNDEBUG
+##
+## LP_CONVTEST_DECIDES removes one shortcut from check_convergence in
+## primme/src/eigs/convergence.c, the only change to PRIMME's sources: a pair
+## whose residual norm is at most the largest one already accepted is flagged
+## converged without calling the convergence test. That holds for a test with
+## one absolute threshold. The test here is relative to each pair's value, so a
+## residual small enough for a large value is too large for a smaller one, and
+## the shortcut would flag such a pair converged without the test seeing it.
+PRIMME_DEFS = -DF77UNDERSCORE -DPRIMME_WITHOUT_FLOAT -DUSE_XHEEV -DUSE_XHEGV -Dzhegv_=lp_zhegv -DNDEBUG -DLP_CONVTEST_DECIDES
 PKG_CPPFLAGS = -Iprimme/include -Iprimme/src/include $(PRIMME_DEFS)
 PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 

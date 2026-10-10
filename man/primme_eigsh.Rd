@@ -20,7 +20,8 @@ primme_eigsh(
   seed = 1L,
   norm = 0,
   floor = 4,
-  preset = "PRIMME_DEFAULT_MIN_MATVECS"
+  preset = "PRIMME_DEFAULT_MIN_MATVECS",
+  convtest = NULL
 )
 }
 \arguments{
@@ -71,6 +72,14 @@ PRIMME to estimate it.}
 rather than PRIMME's own default, `"PRIMME_DYNAMIC"`, because that one
 switches between the two by measured timings, so two runs of the same call
 need not return the same vectors.}
+
+\item{convtest}{`NULL` for the convergence test described under `tol`, or a
+function `(value, x, rnorm, anorm)` returning `TRUE` when the pair is
+converged. It receives PRIMME's Ritz value, the unit Ritz vector or `NULL`
+where PRIMME passes none, PRIMME's residual norm on the operator `apply`
+applies, and the estimate of that operator's norm. A caller iterating on a
+transformed operator, such as a shift-and-invert, measures the pair on the
+operator it wants here.}
 }
 \value{
 A list with `values` (PRIMME's Ritz values), `vectors`, `resNorms`,

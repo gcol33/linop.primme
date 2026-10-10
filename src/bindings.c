@@ -30,6 +30,7 @@ typedef struct {
   PRIMME_INT cols;  /* eigs: n. svds: n, the length of A^H y */
   int failed;       /* 1 when the R function errored or returned the wrong shape */
   double floor;     /* c in the arithmetic floor c * eps * ||A|| of the convergence test */
+  SEXP conv;        /* the caller's convergence test, or R_NilValue for lp_conv_test's own */
   char msg[1024];
 } lp_ctx;
 
@@ -108,10 +109,56 @@ static void lp_svds_matvec(void *x, PRIMME_INT *ldx, void *y, PRIMME_INT *ldy,
   }
 }
 
-/* A pair is converged when its residual meets both of the bounds linop's
-   eigenpair certificate checks, each with the certificate's arithmetic floor
-   f = c eps (||A|| + |value|), Higham's bound on the computed residual: the
-   backward error ||r|| <= tol ||A|| + f, and the relative residual
+/* A copy of len entries at p as an R vector, or NULL when p is. */
+static SEXP lp_vec(const lp_ctx *c, const void *p, PRIMME_INT len)
+{
+  if (p == NULL) return R_NilValue;
+  const size_t esz = c->cplx ? sizeof(Rcomplex) : sizeof(double);
+  SEXP x = Rf_allocVector(c->cplx ? CPLXSXP : REALSXP, (R_xlen_t)len);
+  memcpy(c->cplx ? (void *)COMPLEX(x) : (void *)REAL(x), p, (size_t)len * esz);
+  return x;
+}
+
+/* The caller's convergence test, called with PRIMME's value, the vectors it
+   passes (NULL where it passes none), PRIMME's residual norm and its estimate
+   of the norm of the operator it iterates on: conv(value, x, rnorm, anorm) for
+   an eigenpair, conv(value, u, v, rnorm, anorm) for a singular triplet. It
+   returns TRUE or FALSE. An error inside it sets the failure flag the way an
+   error in the apply does. */
+static int lp_conv_call(lp_ctx *c, double value, SEXP vecs, double rnorm,
+                        double anorm, int *isconv)
+{
+  if (c->failed) return 1;
+  SEXP an = PROTECT(Rf_ScalarReal(anorm));
+  SEXP rn = PROTECT(Rf_ScalarReal(rnorm));
+  SEXP val = PROTECT(Rf_ScalarReal(value));
+  SEXP tail = PROTECT(Rf_cons(rn, Rf_cons(an, R_NilValue)));
+  SEXP args = PROTECT(Rf_listAppend(Rf_duplicate(vecs), tail));
+  SEXP call = PROTECT(Rf_lcons(c->conv, Rf_cons(val, args)));
+  int err = 0;
+  SEXP ok = R_tryEvalSilent(call, c->env, &err);
+  if (err) {
+    const char *m = R_curErrorBuf();
+    lp_fail(c, (m && *m) ? m : "the convergence test was interrupted");
+    UNPROTECT(6);
+    return 1;
+  }
+  PROTECT(ok);
+  if (!Rf_isLogical(ok) || XLENGTH(ok) != 1 || LOGICAL(ok)[0] == NA_LOGICAL) {
+    lp_fail(c, "the convergence test must return TRUE or FALSE");
+    UNPROTECT(7);
+    return 1;
+  }
+  *isconv = LOGICAL(ok)[0];
+  UNPROTECT(7);
+  return 0;
+}
+
+/* A pair is converged when the caller's test says so, if one was given.
+   Without one, it is converged when its residual meets both of the bounds
+   linop's eigenpair certificate checks, each with the certificate's arithmetic
+   floor f = c eps (||A|| + |value|), Higham's bound on the computed residual:
+   the backward error ||r|| <= tol ||A|| + f, and the relative residual
    ||r|| <= tol |value| + f. The second is waived where |value| has itself
    fallen to c eps ||A||, below which that ratio stops measuring the solve.
    ||A|| is the caller's estimate when given, else PRIMME's largest |Ritz value|
@@ -119,9 +166,17 @@ static void lp_svds_matvec(void *x, PRIMME_INT *ldx, void *y, PRIMME_INT *ldy,
 static void lp_conv_test(double *eval, void *evec, double *rNorm, int *isconv,
                          struct primme_params *pp, int *ierr)
 {
-  (void)evec;
-  const lp_ctx *c = (const lp_ctx *)pp->convtest;
+  lp_ctx *c = (lp_ctx *)pp->convtest;
   const double anorm = pp->aNorm > 0 ? pp->aNorm : pp->stats.estimateLargestSVal;
+  if (c->conv != R_NilValue) {
+    *isconv = 0;
+    SEXP x = PROTECT(lp_vec(c, evec, c->rows));
+    SEXP vecs = PROTECT(Rf_cons(x, R_NilValue));
+    *ierr = lp_conv_call(c, eval != NULL ? *eval : NA_REAL, vecs, *rNorm, anorm,
+                         isconv);
+    UNPROTECT(2);
+    return;
+  }
   const double tol = pp->eps;
   const double v = eval != NULL ? fabs(*eval) : 0.0;
   const double f = c->floor * DBL_EPSILON * (anorm + v);
@@ -131,6 +186,23 @@ static void lp_conv_test(double *eval, void *evec, double *rNorm, int *isconv,
   }
   *isconv = ok;
   *ierr = 0;
+}
+
+/* A triplet is converged when the caller's test says so. PRIMME passes the
+   left vector, the right one or both according to the stage it is in. */
+static void lp_svds_conv_test(double *sval, void *leftsvec, void *rightsvec,
+                              double *rNorm, int *method, int *isconv,
+                              struct primme_svds_params *ps, int *ierr)
+{
+  (void)method;
+  lp_ctx *c = (lp_ctx *)ps->convtest;
+  *isconv = 0;
+  SEXP u = PROTECT(lp_vec(c, leftsvec, c->rows));
+  SEXP v = PROTECT(lp_vec(c, rightsvec, c->cols));
+  SEXP vecs = PROTECT(Rf_cons(u, Rf_cons(v, R_NilValue)));
+  *ierr = lp_conv_call(c, sval != NULL ? *sval : NA_REAL, vecs,
+                       rNorm != NULL ? *rNorm : NA_REAL, ps->aNorm, isconv);
+  UNPROTECT(3);
 }
 
 static int lp_int(SEXP s, const char *what)
@@ -196,7 +268,7 @@ static SEXP lp_params(int maxBasisSize, int minRestartSize, int maxBlockSize,
 SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
               SEXP s_tol, SEXP s_maxBasis, SEXP s_minRestart, SEXP s_block,
               SEXP s_locking, SEXP s_maxMatvecs, SEXP s_v0, SEXP s_cplx, SEXP s_seed,
-              SEXP s_aNorm, SEXP s_floor, SEXP s_preset)
+              SEXP s_aNorm, SEXP s_floor, SEXP s_preset, SEXP s_conv)
 {
   const PRIMME_INT n = (PRIMME_INT)Rf_asReal(s_n);
   const int k = lp_int(s_k, "k");
@@ -208,6 +280,7 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
   memset(&c, 0, sizeof c);
   c.fn = fn; c.env = env; c.cplx = cplx; c.rows = n; c.cols = n;
   c.floor = Rf_asReal(s_floor);
+  c.conv = s_conv;
 
   primme_params pp;
   primme_initialize(&pp);
@@ -296,7 +369,7 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
 SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
              SEXP s_tol, SEXP s_maxBasis, SEXP s_block, SEXP s_locking,
              SEXP s_maxMatvecs,
-             SEXP s_cplx, SEXP s_seed, SEXP s_aNorm, SEXP s_preset)
+             SEXP s_cplx, SEXP s_seed, SEXP s_aNorm, SEXP s_preset, SEXP s_conv)
 {
   const PRIMME_INT m = (PRIMME_INT)Rf_asReal(s_m);
   const PRIMME_INT n = (PRIMME_INT)Rf_asReal(s_n);
@@ -309,6 +382,7 @@ SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
   lp_ctx c;
   memset(&c, 0, sizeof c);
   c.fn = fn; c.env = env; c.cplx = cplx; c.rows = m; c.cols = n;
+  c.conv = s_conv;
 
   primme_svds_params ps;
   primme_svds_initialize(&ps);
@@ -323,6 +397,11 @@ SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
   ps.maxMatvecs = (PRIMME_INT)Rf_asReal(s_maxMatvecs);
   ps.aNorm = Rf_asReal(s_aNorm);
   lp_seed(ps.iseed, Rf_asInteger(s_seed));
+  if (s_conv != R_NilValue) {
+    ps.convTestFun = lp_svds_conv_test;
+    ps.convTestFun_type = primme_op_double;
+    ps.convtest = &c;
+  }
   switch (target) {
   case 0: ps.target = primme_svds_largest; break;
   case 1: ps.target = primme_svds_smallest; break;

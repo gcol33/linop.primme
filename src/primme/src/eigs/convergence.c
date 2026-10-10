@@ -141,10 +141,12 @@ int check_convergence_Sprimme(SCALAR *X, PRIMME_INT ldX, int givenX, SCALAR *R,
       }
 #endif
 
+#ifndef LP_CONVTEST_DECIDES
       if (blockNorms[i-left] <= primme->stats.maxConvTol) {
          flags[i] = CONVERGED;
          continue;
       }
+#endif
 
       CHKERR(convTestFun_Sprimme(hVals[i], X ? &X[ldX * (i - left)] : NULL,
             givenX, blockNorms[i - left], &isConv, ctx));
