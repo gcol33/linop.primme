@@ -14,10 +14,13 @@ primme_eigsh(
   ncv = NULL,
   min_restart = NULL,
   block = NULL,
+  locking = NULL,
   v0 = NULL,
   complex = FALSE,
   seed = 1L,
-  norm = 0
+  norm = 0,
+  floor = 4,
+  preset = "PRIMME_DEFAULT_MIN_MATVECS"
 )
 }
 \arguments{
@@ -31,8 +34,14 @@ applied to it.}
 \item{which}{`"LA"`, `"SA"` (largest, smallest algebraic), `"LM"` or `"SM"`
 (largest, smallest magnitude).}
 
-\item{tol}{PRIMME's `eps`: a pair is converged when its residual norm is at
-most `tol` times the estimate of `||A||`.}
+\item{tol}{PRIMME's `eps`. A pair is converged when its residual norm is at
+most `tol` times the estimate of `||A||` and at most `tol` times the
+magnitude of its value, each plus the arithmetic floor
+`floor * .Machine$double.eps * (||A|| + |value|)`, the second waived where
+that magnitude is below `floor * .Machine$double.eps` times the estimate of
+`||A||`. These are the backward-error and residual bounds of 'linop''s
+eigenpair certificate.
+PRIMME refuses a `tol` below machine epsilon.}
 
 \item{maxit}{PRIMME's `maxMatvecs`, the budget of single-column applies.}
 
@@ -42,6 +51,9 @@ most `tol` times the estimate of `||A||`.}
 
 \item{block}{PRIMME's `maxBlockSize`, or `NULL` for its default.}
 
+\item{locking}{PRIMME's `locking`, `TRUE` or `FALSE`, or `NULL` for its
+default.}
+
 \item{v0}{An initial guess of length `n`, or `NULL`.}
 
 \item{complex}{Whether the operator is complex.}
@@ -50,6 +62,15 @@ most `tol` times the estimate of `||A||`.}
 
 \item{norm}{An estimate of `||A||` for the convergence test, or `0` for
 PRIMME to estimate it.}
+
+\item{floor}{`c` in the arithmetic floor of the convergence test.}
+
+\item{preset}{The name of a PRIMME preset method, such as
+`"PRIMME_DEFAULT_MIN_MATVECS"` (GD+k), `"PRIMME_DEFAULT_MIN_TIME"`
+(JDQMR), `"PRIMME_Arnoldi"` or `"PRIMME_DYNAMIC"`. The default is GD+k
+rather than PRIMME's own default, `"PRIMME_DYNAMIC"`, because that one
+switches between the two by measured timings, so two runs of the same call
+need not return the same vectors.}
 }
 \value{
 A list with `values` (PRIMME's Ritz values), `vectors`, `resNorms`,

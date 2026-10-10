@@ -14,9 +14,11 @@ primme_svds(
   maxit = 10000L,
   ncv = NULL,
   block = NULL,
+  locking = NULL,
   complex = FALSE,
   seed = 1L,
-  norm = 0
+  norm = 0,
+  preset = "PRIMME_DEFAULT_MIN_MATVECS"
 )
 }
 \arguments{
@@ -29,8 +31,14 @@ the conjugate transpose of `A` applied to `X` when it is `TRUE`.}
 
 \item{which}{`"LM"` (largest) or `"SM"` (smallest).}
 
-\item{tol}{PRIMME's `eps`: a pair is converged when its residual norm is at
-most `tol` times the estimate of `||A||`.}
+\item{tol}{PRIMME's `eps`. A pair is converged when its residual norm is at
+most `tol` times the estimate of `||A||` and at most `tol` times the
+magnitude of its value, each plus the arithmetic floor
+`floor * .Machine$double.eps * (||A|| + |value|)`, the second waived where
+that magnitude is below `floor * .Machine$double.eps` times the estimate of
+`||A||`. These are the backward-error and residual bounds of 'linop''s
+eigenpair certificate.
+PRIMME refuses a `tol` below machine epsilon.}
 
 \item{maxit}{PRIMME's `maxMatvecs`, the budget of single-column applies.}
 
@@ -38,16 +46,25 @@ most `tol` times the estimate of `||A||`.}
 
 \item{block}{PRIMME's `maxBlockSize`, or `NULL` for its default.}
 
+\item{locking}{PRIMME's `locking`, `TRUE` or `FALSE`, or `NULL` for its
+default.}
+
 \item{complex}{Whether the operator is complex.}
 
 \item{seed}{Seed for PRIMME's own random initial vectors.}
 
 \item{norm}{An estimate of `||A||` for the convergence test, or `0` for
 PRIMME to estimate it.}
+
+\item{preset}{The PRIMME preset method for both stages of the singular value
+solver; see [primme_eigsh()].}
 }
 \value{
 A list with `d`, `u`, `v`, `resNorms`, `nconv`, `info`, the overall
-  `stats` and those of each of PRIMME's two stages, and `params`.
+  `stats` and those of each of PRIMME's two stages, and `params`. PRIMME
+  returns only the triplets it converged, so after an exhausted budget
+  (`info` `-103` or `-203`, the eigensolver's `-3` from the first or second
+  stage) `d`, `u` and `v` hold `nconv` of them, possibly none.
 }
 \description{
 Calls `dprimme_svds()` or `zprimme_svds()` with the default method, on an

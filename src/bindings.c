@@ -18,6 +18,8 @@
 #include <R.h>
 #include <Rinternals.h>
 #include <string.h>
+#include <math.h>
+#include <float.h>
 #include "primme.h"
 
 typedef struct {
@@ -27,6 +29,7 @@ typedef struct {
   PRIMME_INT rows;  /* eigs: n. svds: m, the length of A x */
   PRIMME_INT cols;  /* eigs: n. svds: n, the length of A^H y */
   int failed;       /* 1 when the R function errored or returned the wrong shape */
+  double floor;     /* c in the arithmetic floor c * eps * ||A|| of the convergence test */
   char msg[1024];
 } lp_ctx;
 
@@ -105,6 +108,31 @@ static void lp_svds_matvec(void *x, PRIMME_INT *ldx, void *y, PRIMME_INT *ldy,
   }
 }
 
+/* A pair is converged when its residual meets both of the bounds linop's
+   eigenpair certificate checks, each with the certificate's arithmetic floor
+   f = c eps (||A|| + |value|), Higham's bound on the computed residual: the
+   backward error ||r|| <= tol ||A|| + f, and the relative residual
+   ||r|| <= tol |value| + f. The second is waived where |value| has itself
+   fallen to c eps ||A||, below which that ratio stops measuring the solve.
+   ||A|| is the caller's estimate when given, else PRIMME's largest |Ritz value|
+   seen, which is a lower bound. */
+static void lp_conv_test(double *eval, void *evec, double *rNorm, int *isconv,
+                         struct primme_params *pp, int *ierr)
+{
+  (void)evec;
+  const lp_ctx *c = (const lp_ctx *)pp->convtest;
+  const double anorm = pp->aNorm > 0 ? pp->aNorm : pp->stats.estimateLargestSVal;
+  const double tol = pp->eps;
+  const double v = eval != NULL ? fabs(*eval) : 0.0;
+  const double f = c->floor * DBL_EPSILON * (anorm + v);
+  int ok = *rNorm <= tol * anorm + f;
+  if (ok && eval != NULL && v > c->floor * DBL_EPSILON * anorm) {
+    ok = *rNorm <= tol * v + f;
+  }
+  *isconv = ok;
+  *ierr = 0;
+}
+
 static int lp_int(SEXP s, const char *what)
 {
   if (!Rf_isNumeric(s) || XLENGTH(s) != 1) Rf_error("%s must be a single number", what);
@@ -167,8 +195,8 @@ static SEXP lp_params(int maxBasisSize, int minRestartSize, int maxBlockSize,
    2 largest magnitude, 3 smallest magnitude. */
 SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
               SEXP s_tol, SEXP s_maxBasis, SEXP s_minRestart, SEXP s_block,
-              SEXP s_maxMatvecs, SEXP s_v0, SEXP s_cplx, SEXP s_seed,
-              SEXP s_aNorm)
+              SEXP s_locking, SEXP s_maxMatvecs, SEXP s_v0, SEXP s_cplx, SEXP s_seed,
+              SEXP s_aNorm, SEXP s_floor, SEXP s_preset)
 {
   const PRIMME_INT n = (PRIMME_INT)Rf_asReal(s_n);
   const int k = lp_int(s_k, "k");
@@ -179,6 +207,7 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
   lp_ctx c;
   memset(&c, 0, sizeof c);
   c.fn = fn; c.env = env; c.cplx = cplx; c.rows = n; c.cols = n;
+  c.floor = Rf_asReal(s_floor);
 
   primme_params pp;
   primme_initialize(&pp);
@@ -186,6 +215,9 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
   pp.numEvals = k;
   pp.matrixMatvec = lp_eigs_matvec;
   pp.matrix = &c;
+  pp.convTestFun = lp_conv_test;
+  pp.convTestFun_type = primme_op_double;
+  pp.convtest = &c;
   pp.eps = Rf_asReal(s_tol);
   pp.printLevel = 0;
   pp.outputFile = NULL;
@@ -206,8 +238,14 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
   if (s_maxBasis != R_NilValue) pp.maxBasisSize = lp_int(s_maxBasis, "maxBasisSize");
   if (s_minRestart != R_NilValue) pp.minRestartSize = lp_int(s_minRestart, "minRestartSize");
   if (s_block != R_NilValue) pp.maxBlockSize = lp_int(s_block, "maxBlockSize");
+  if (s_locking != R_NilValue) pp.locking = Rf_asInteger(s_locking);
 
-  const int pm = primme_set_method(PRIMME_DEFAULT_METHOD, &pp);
+  int preset = 0;
+  if (primme_constant_info(CHAR(STRING_ELT(s_preset, 0)), &preset) != 0) {
+    primme_free(&pp);
+    Rf_error("unknown PRIMME preset '%s'", CHAR(STRING_ELT(s_preset, 0)));
+  }
+  const int pm = primme_set_method((primme_preset_method)preset, &pp);
   if (pm != 0) { primme_free(&pp); Rf_error("primme_set_method failed with %d", pm); }
 
   SEXP evals = PROTECT(Rf_allocVector(REALSXP, k));
@@ -256,8 +294,9 @@ SEXP lp_eigsh(SEXP fn, SEXP env, SEXP s_n, SEXP s_k, SEXP s_target,
 
 /* target codes: 0 largest, 1 smallest. */
 SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
-             SEXP s_tol, SEXP s_maxBasis, SEXP s_block, SEXP s_maxMatvecs,
-             SEXP s_cplx, SEXP s_seed, SEXP s_aNorm)
+             SEXP s_tol, SEXP s_maxBasis, SEXP s_block, SEXP s_locking,
+             SEXP s_maxMatvecs,
+             SEXP s_cplx, SEXP s_seed, SEXP s_aNorm, SEXP s_preset)
 {
   const PRIMME_INT m = (PRIMME_INT)Rf_asReal(s_m);
   const PRIMME_INT n = (PRIMME_INT)Rf_asReal(s_n);
@@ -291,9 +330,16 @@ SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
   }
   if (s_maxBasis != R_NilValue) ps.maxBasisSize = lp_int(s_maxBasis, "maxBasisSize");
   if (s_block != R_NilValue) ps.maxBlockSize = lp_int(s_block, "maxBlockSize");
+  if (s_locking != R_NilValue) ps.locking = Rf_asInteger(s_locking);
 
-  const int pm = primme_svds_set_method(primme_svds_default, PRIMME_DEFAULT_METHOD,
-                                        PRIMME_DEFAULT_METHOD, &ps);
+  int preset = 0;
+  if (primme_constant_info(CHAR(STRING_ELT(s_preset, 0)), &preset) != 0) {
+    primme_svds_free(&ps);
+    Rf_error("unknown PRIMME preset '%s'", CHAR(STRING_ELT(s_preset, 0)));
+  }
+  const int pm = primme_svds_set_method(primme_svds_default,
+                                        (primme_preset_method)preset,
+                                        (primme_preset_method)preset, &ps);
   if (pm != 0) { primme_svds_free(&ps); Rf_error("primme_svds_set_method failed with %d", pm); }
 
   SEXP svals = PROTECT(Rf_allocVector(REALSXP, k));
@@ -325,29 +371,39 @@ SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
 
   if (c.failed) Rf_error("%s", c.msg);
 
-  /* svecs holds the k left vectors (m each) followed by the k right vectors. */
-  SEXP U = PROTECT(Rf_allocMatrix(cplx ? CPLXSXP : REALSXP, (int)m, k));
-  SEXP V = PROTECT(Rf_allocMatrix(cplx ? CPLXSXP : REALSXP, (int)n, k));
+  /* svecs holds the nconv left vectors (m each) followed by the nconv right
+     vectors: PRIMME packs only what converged, so after an exhausted budget
+     the right block starts at m * nconv, not at m * k. */
+  SEXP U = PROTECT(Rf_allocMatrix(cplx ? CPLXSXP : REALSXP, (int)m, nconv));
+  SEXP V = PROTECT(Rf_allocMatrix(cplx ? CPLXSXP : REALSXP, (int)n, nconv));
   const size_t esz = cplx ? sizeof(Rcomplex) : sizeof(double);
   char *sd = cplx ? (char *)COMPLEX(svecs) : (char *)REAL(svecs);
-  memcpy(cplx ? (char *)COMPLEX(U) : (char *)REAL(U), sd, esz * (size_t)m * k);
-  memcpy(cplx ? (char *)COMPLEX(V) : (char *)REAL(V), sd + esz * (size_t)m * k,
-         esz * (size_t)n * k);
+  if (nconv > 0) {
+    memcpy(cplx ? (char *)COMPLEX(U) : (char *)REAL(U), sd, esz * (size_t)m * nconv);
+    memcpy(cplx ? (char *)COMPLEX(V) : (char *)REAL(V), sd + esz * (size_t)m * nconv,
+           esz * (size_t)n * nconv);
+  }
+  SEXP d = PROTECT(Rf_allocVector(REALSXP, nconv));
+  SEXP rn = PROTECT(Rf_allocVector(REALSXP, nconv));
+  for (int j = 0; j < nconv; j++) {
+    REAL(d)[j] = REAL(svals)[j];
+    REAL(rn)[j] = REAL(rnorms)[j];
+  }
 
   const char *nm[] = {"d", "u", "v", "resNorms", "nconv", "info", "stats",
                       "stats_stage1", "stats_stage2", "params", ""};
   SEXP out = PROTECT(Rf_mkNamed(VECSXP, nm));
-  SET_VECTOR_ELT(out, 0, svals);
+  SET_VECTOR_ELT(out, 0, d);
   SET_VECTOR_ELT(out, 1, U);
   SET_VECTOR_ELT(out, 2, V);
-  SET_VECTOR_ELT(out, 3, rnorms);
+  SET_VECTOR_ELT(out, 3, rn);
   SET_VECTOR_ELT(out, 4, Rf_ScalarInteger(nconv));
   SET_VECTOR_ELT(out, 5, Rf_ScalarInteger(ret));
   SET_VECTOR_ELT(out, 6, sst);
   SET_VECTOR_ELT(out, 7, stats);
   SET_VECTOR_ELT(out, 8, stats2);
   SET_VECTOR_ELT(out, 9, params);
-  UNPROTECT(10);
+  UNPROTECT(12);
   return out;
 }
 

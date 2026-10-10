@@ -117,3 +117,20 @@ test_that("an exhausted budget is a return code, not an error", {
   ## exceeded by at most one block.
   expect_lte(f$stats$numMatvecs, 30 + f$params$maxBlockSize)
 })
+
+test_that("the default preset returns the same vectors on every run", {
+  ## PRIMME's own default switches methods on measured timings, so it does not;
+  ## GD+k, the default here, does.
+  n <- 400
+  set.seed(1)
+  v0 <- rnorm(n)
+  runs <- lapply(1:3, function(i)
+    primme_eigsh(lap_apply(n), n, 3, which = "SA", tol = 1e-10, block = 3L, v0 = v0))
+  expect_identical(runs[[2]]$vectors, runs[[1]]$vectors)
+  expect_identical(runs[[3]]$vectors, runs[[1]]$vectors)
+  A <- matrix(rnorm(60 * 40), 60)
+  ap <- function(X, trans) if (trans) crossprod(A, X) else A %*% X
+  s <- lapply(1:3, function(i) primme_svds(ap, 60, 40, 3, block = 3L))
+  expect_identical(s[[2]]$u, s[[1]]$u)
+  expect_identical(s[[3]]$v, s[[1]]$v)
+})
