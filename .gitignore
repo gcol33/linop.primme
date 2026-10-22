@@ -5,3 +5,4 @@
 *.dll
 linop.primme.Rcheck/
 linop.primme_*.tar.gz
+.run*

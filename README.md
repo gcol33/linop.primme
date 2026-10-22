@@ -1,0 +1,186 @@
+
+# linop.primme
+
+*a compiled eigensolver for matrix-free operators*
+
+<!-- badges: start -->
+
+[![License: BSD
+3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+<!-- badges: end -->
+
+linop.primme computes a few eigenpairs of a Hermitian operator, or a few
+singular triplets of a rectangular one, with the
+[PRIMME](https://github.com/primme/primme) library, from the operator’s
+action alone.
+
+The package is the compiled engine behind `method = "primme"` in
+[linop](https://github.com/gcol33/linop), the package for matrix-free
+linear operators. PRIMME (Stathopoulos and McCombs 2010; Wu, Romero and
+Stathopoulos 2017) restarts implicitly, so it keeps a basis of fixed
+small size while it iterates. Once linop.primme is installed, linop’s
+`eigs()` and `svds()` use it by default, and the certificate that comes
+back with each result records which engine ran and why, so you can check
+what produced the numbers you report. linop.primme supports:
+
+- **Eigenpairs of Hermitian operators.** Real and complex operators, at
+  either end of the spectrum by value or by magnitude, and near a shift
+  through linop’s shift-invert.
+- **Singular triplets of rectangular operators.** The largest or
+  smallest singular values, with both singular vectors.
+- **The same certificate as linop’s own engine.** The reported values
+  are Rayleigh quotients measured on the operator, and convergence is
+  decided by the backward-error and residual bounds of linop’s eigenpair
+  certificate.
+
+PRIMME 3.2.3 is included unchanged except for one shortcut in its
+convergence check, which is compiled out so that linop’s convergence
+test decides every pair. The tests check both engines against
+closed-form spectra, real and complex.
+
+## Installation
+
+The package compiles C code. Install the build tools for your operating
+system first:
+
+| Operating system | Build tools                                              |
+|------------------|----------------------------------------------------------|
+| Windows          | [Rtools](https://cran.r-project.org/bin/windows/Rtools/) |
+| macOS            | Run `xcode-select --install` in Terminal                 |
+| Debian / Ubuntu  | Install `r-base-dev`                                     |
+
+Check that R can find the compiler:
+
+``` r
+pkgbuild::has_build_tools(debug = TRUE)
+```
+
+Then install linop and linop.primme:
+
+``` r
+# install.packages("pak")
+pak::pak(c("gcol33/linop", "gcol33/linop.primme"))
+```
+
+PRIMME is compiled from the copy in the package source and links against
+the BLAS and LAPACK libraries that R itself uses, so no separate PRIMME,
+BLAS or LAPACK installation is needed.
+
+## Usage
+
+1.  Build an operator with `linop()` from linop.
+2.  Call `eigs()` or `svds()` from linop. The default `method = "auto"`
+    takes PRIMME when linop.primme is installed, and `method = "primme"`
+    asks for it by name.
+3.  Read which engine ran from the certificate’s `dispatch` record.
+
+A diagonal operator with three eigenvalues above the rest of its
+spectrum:
+
+``` r
+library(linop)
+
+lam <- c(8, 7.5, 7, seq(3, 1, length.out = 997))
+A <- linop_scaling(lam)
+fit <- eigs(A, k = 3, method = "primme")
+fit
+#> <primme> 3 of 3 requested eigenpairs converged, which = 'largest'
+#>   43 iterations of at most 300, 3 restarts
+#>   values: 8.0  7.5  7.0
+#>   certificate: qualified
+```
+
+The certificate records the engines considered and why PRIMME was
+chosen:
+
+``` r
+certificate(fit)$dispatch$reason
+#> [1] "hermitian operator, PRIMME with implicit restarting (requested by name)"
+```
+
+linop.primme also exports the two calls linop makes, `primme_eigsh()`
+and `primme_svds()`, which take the operator as a function on a block of
+columns and pass PRIMME’s own settings through. `primme_engine()`
+reports the version of the vendored PRIMME and of the calling contract
+with linop:
+
+``` r
+linop.primme::primme_engine()
+#> $engine_version
+#> [1] "3.2.3"
+#> 
+#> $contract_version
+#> [1] "1.1"
+```
+
+## Documentation
+
+- [Eigenvalues and singular
+  values](https://gillescolling.com/linop/articles/spectral.html):
+  `eigs()` and `svds()` in linop, which choose the engine.
+- [Reading a
+  certificate](https://gillescolling.com/linop/articles/certificates.html):
+  what comes back attached to every result.
+- `?primme_eigsh` and `?primme_svds`: the direct calls, with each PRIMME
+  setting they pass through.
+
+## Getting help
+
+Questions and bug reports go to the [GitHub
+issues](https://github.com/gcol33/linop.primme/issues). A bug report is
+easiest to act on with a small reproducible example, for instance made
+with [reprex](https://reprex.tidyverse.org/).
+
+## Support
+
+> “Software is like sex: it’s better when it’s free.” — Linus Torvalds
+
+I’m a PhD student who builds R packages in my free time because I
+believe good tools should be free and open. I started these projects for
+my own work and figured others might find them useful too.
+
+If this package saved you some time, buying me a coffee is a nice way to
+say thanks. It helps with my coffee addiction.
+
+[![Buy Me A
+Coffee](https://img.shields.io/badge/-Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/gcol33)
+
+## Acknowledgements
+
+The eigensolver is [PRIMME](https://github.com/primme/primme) by Andreas
+Stathopoulos, Eloy Romero, Lingfei Wu and co-authors at the College of
+William & Mary (Stathopoulos and McCombs 2010,
+[doi:10.1145/1731022.1731031](https://doi.org/10.1145/1731022.1731031);
+Wu, Romero and Stathopoulos 2017,
+[doi:10.1137/16M1082214](https://doi.org/10.1137/16M1082214)). Every
+eigenpair and singular triplet this package returns is computed by it.
+
+## License
+
+linop.primme is licensed under the BSD 3-clause license, the license of
+the PRIMME library it includes.
+
+## Citation
+
+If you use linop.primme, please cite the package and PRIMME
+(Stathopoulos and McCombs 2010, <doi:10.1145/1731022.1731031>; Wu,
+Romero and Stathopoulos 2017, <doi:10.1137/16M1082214>), which computes
+the eigenpairs and singular triplets.
+
+``` text
+Colling G (2026). _linop.primme: The 'PRIMME' Eigensolver as a Compiled
+Engine for 'linop'_. R package version 0.0.0.9000,
+<https://github.com/gcol33/linop.primme>.
+```
+
+BibTeX:
+
+``` bibtex
+@Manual{colling2026linop.primme,
+  title = {linop.primme: The 'PRIMME' Eigensolver as a Compiled Engine for 'linop'},
+  author = {Gilles Colling},
+  year = {2026},
+  note = {R package version 0.0.0.9000},
+  url = {https://github.com/gcol33/linop.primme},
+}
+```

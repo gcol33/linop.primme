@@ -6,3 +6,7 @@
 \.o$
 \.dll$
 \.so$
+^README\.Rmd$
+^sidecars$
+^\.run.*$
+^CITATION\.cff$
