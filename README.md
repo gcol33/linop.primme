@@ -85,7 +85,7 @@ A <- linop_scaling(lam)
 fit <- eigs(A, k = 3, method = "primme")
 fit
 #> <primme> 3 of 3 requested eigenpairs converged, which = 'largest'
-#>   43 iterations of at most 300, 3 restarts
+#>   43 iterations of at most 20000, 3 restarts
 #>   values: 8.0  7.5  7.0
 #>   certificate: qualified
 ```
@@ -115,14 +115,17 @@ linop.primme::primme_engine()
 
 ## Documentation
 
-- [Eigenvalues and singular
-  values](https://gillescolling.com/linop/articles/spectral.html):
-  `eigs()` and `svds()` in linop, which choose the engine.
+Start with [Eigenvalues and singular
+values](https://gillescolling.com/linop/articles/spectral.html) in
+linop: `eigs()` and `svds()`, the two calls that choose the engine.
+
 - [Reading a
   certificate](https://gillescolling.com/linop/articles/certificates.html):
   what comes back attached to every result.
 - `?primme_eigsh` and `?primme_svds`: the direct calls, with each PRIMME
   setting they pass through.
+- `?primme_engine`: the version of the vendored PRIMME and of the
+  calling contract with linop.
 
 ## Getting help
 
