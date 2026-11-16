@@ -432,6 +432,12 @@ int monitorFunSVDS_dprimme(dummy_type_dprimme *basisSvals, int basisSize, int *b
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
+#if !defined(CHECK_TEMPLATE) && !defined(matrixMatvec_eigs_ctx)
+#  define matrixMatvec_eigs_ctx CONCAT(matrixMatvec_eigs_ctx,SCALAR_SUF)
+#endif
+int matrixMatvec_eigs_ctxdprimme(dummy_type_dprimme *x, PRIMME_INT ldx, dummy_type_dprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
 #if !defined(CHECK_TEMPLATE) && !defined(matrixMatvec_eigs_Sprimme)
 #  define matrixMatvec_eigs_Sprimme CONCAT(matrixMatvec_eigs_,SCALAR_SUF)
 #endif
@@ -522,7 +528,7 @@ int monitorFunSVDS_dprimme(dummy_type_dprimme *basisSvals, int basisSize, int *b
 #if !defined(CHECK_TEMPLATE) && !defined(matrixMatvec_eigs_RHqprimme)
 #  define matrixMatvec_eigs_RHqprimme CONCAT(matrixMatvec_eigs_,CONCAT(CONCAT(CONCAT(,q),primme),))
 #endif
-void matrixMatvec_eigs_dprimme(void *x_, PRIMME_INT *ldx, void *y_,
+void matrixMatvec_eigs_dprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 #if !defined(CHECK_TEMPLATE) && !defined(applyPreconditioner_eigs_Sprimme)
 #  define applyPreconditioner_eigs_Sprimme CONCAT(applyPreconditioner_eigs_,SCALAR_SUF)
@@ -656,6 +662,14 @@ void default_monitor_svdsdprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+#if !defined(CHECK_TEMPLATE) && !defined(monitor_single_stage_ctx)
+#  define monitor_single_stage_ctx CONCAT(monitor_single_stage_ctx,SCALAR_SUF)
+#endif
+int monitor_single_stage_ctxdprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 #if !defined(CHECK_TEMPLATE) && !defined(monitor_single_stage)
 #  define monitor_single_stage CONCAT(monitor_single_stage,SCALAR_SUF)
 #endif
@@ -664,6 +678,14 @@ void monitor_single_stagedprimme(void *basisEvals_, int *basisSize,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+#if !defined(CHECK_TEMPLATE) && !defined(monitor_stage1_ctx)
+#  define monitor_stage1_ctx CONCAT(monitor_stage1_ctx,SCALAR_SUF)
+#endif
+int monitor_stage1_ctxdprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 #if !defined(CHECK_TEMPLATE) && !defined(monitor_stage1)
 #  define monitor_stage1 CONCAT(monitor_stage1,SCALAR_SUF)
 #endif
@@ -672,6 +694,14 @@ void monitor_stage1dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+#if !defined(CHECK_TEMPLATE) && !defined(monitor_stage2_ctx)
+#  define monitor_stage2_ctx CONCAT(monitor_stage2_ctx,SCALAR_SUF)
+#endif
+int monitor_stage2_ctxdprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 #if !defined(CHECK_TEMPLATE) && !defined(monitor_stage2)
 #  define monitor_stage2 CONCAT(monitor_stage2,SCALAR_SUF)
 #endif
@@ -704,7 +734,10 @@ int monitorFunSVDS_hprimme(dummy_type_sprimme *basisSvals, int basisSize, int *b
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_hprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxhprimme(dummy_type_hprimme *x, PRIMME_INT ldx, dummy_type_hprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -727,16 +760,31 @@ void default_monitor_svdshprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxhprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagehprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxhprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxhprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -766,7 +814,10 @@ int monitorFunSVDS_kprimme(dummy_type_sprimme *basisSvals, int basisSize, int *b
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_kprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxkprimme(dummy_type_kprimme *x, PRIMME_INT ldx, dummy_type_kprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -789,16 +840,31 @@ void default_monitor_svdskprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxkprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagekprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxkprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxkprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -828,7 +894,10 @@ int monitorFunSVDS_sprimme(dummy_type_sprimme *basisSvals, int basisSize, int *b
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_sprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxsprimme(dummy_type_sprimme *x, PRIMME_INT ldx, dummy_type_sprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -851,16 +920,31 @@ void default_monitor_svdssprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxsprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagesprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxsprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxsprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -890,7 +974,10 @@ int monitorFunSVDS_cprimme(dummy_type_sprimme *basisSvals, int basisSize, int *b
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcprimme(dummy_type_cprimme *x, PRIMME_INT ldx, dummy_type_cprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -913,16 +1000,31 @@ void default_monitor_svdscprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -952,7 +1054,10 @@ int monitorFunSVDS_zprimme(dummy_type_dprimme *basisSvals, int basisSize, int *b
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_zprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxzprimme(dummy_type_zprimme *x, PRIMME_INT ldx, dummy_type_zprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -975,16 +1080,31 @@ void default_monitor_svdszprimme(void *basisSvals_, int *basisSize, int *basisFl
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxzprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagezprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxzprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxzprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1014,7 +1134,10 @@ int monitorFunSVDS_magma_hprimme(dummy_type_sprimme *basisSvals, int basisSize, 
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_hprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_hprimme(dummy_type_magma_hprimme *x, PRIMME_INT ldx, dummy_type_magma_hprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1037,16 +1160,31 @@ void default_monitor_svdsmagma_hprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_hprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_hprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1076,7 +1214,10 @@ int monitorFunSVDS_magma_kprimme(dummy_type_sprimme *basisSvals, int basisSize, 
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_kprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_kprimme(dummy_type_magma_kprimme *x, PRIMME_INT ldx, dummy_type_magma_kprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1099,16 +1240,31 @@ void default_monitor_svdsmagma_kprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_kprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_kprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1138,7 +1294,10 @@ int monitorFunSVDS_magma_sprimme(dummy_type_sprimme *basisSvals, int basisSize, 
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_sprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_sprimme(dummy_type_magma_sprimme *x, PRIMME_INT ldx, dummy_type_magma_sprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1161,16 +1320,31 @@ void default_monitor_svdsmagma_sprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_sprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_sprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1200,7 +1374,10 @@ int monitorFunSVDS_magma_cprimme(dummy_type_sprimme *basisSvals, int basisSize, 
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_cprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_cprimme(dummy_type_magma_cprimme *x, PRIMME_INT ldx, dummy_type_magma_cprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1223,16 +1400,31 @@ void default_monitor_svdsmagma_cprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_cprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_cprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1262,7 +1454,10 @@ int monitorFunSVDS_magma_dprimme(dummy_type_dprimme *basisSvals, int basisSize, 
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_dprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_dprimme(dummy_type_magma_dprimme *x, PRIMME_INT ldx, dummy_type_magma_dprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_dprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_dprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1285,16 +1480,31 @@ void default_monitor_svdsmagma_dprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_dprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_dprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1324,7 +1534,10 @@ int monitorFunSVDS_magma_zprimme(dummy_type_dprimme *basisSvals, int basisSize, 
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_magma_zprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxmagma_zprimme(dummy_type_magma_zprimme *x, PRIMME_INT ldx, dummy_type_magma_zprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_magma_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_magma_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1347,16 +1560,31 @@ void default_monitor_svdsmagma_zprimme(void *basisSvals_, int *basisSize, int *b
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxmagma_zprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagemagma_zprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxmagma_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1magma_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxmagma_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2magma_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1386,7 +1614,10 @@ int monitorFunSVDS_cublas_hprimme(dummy_type_sprimme *basisSvals, int basisSize,
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_hprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_hprimme(dummy_type_cublas_hprimme *x, PRIMME_INT ldx, dummy_type_cublas_hprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_hprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1409,16 +1640,31 @@ void default_monitor_svdscublas_hprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_hprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_hprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_hprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1448,7 +1694,10 @@ int monitorFunSVDS_cublas_kprimme(dummy_type_sprimme *basisSvals, int basisSize,
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_kprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_kprimme(dummy_type_cublas_kprimme *x, PRIMME_INT ldx, dummy_type_cublas_kprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_kprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1471,16 +1720,31 @@ void default_monitor_svdscublas_kprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_kprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_kprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_kprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1510,7 +1774,10 @@ int monitorFunSVDS_cublas_sprimme(dummy_type_sprimme *basisSvals, int basisSize,
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_sprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_sprimme(dummy_type_cublas_sprimme *x, PRIMME_INT ldx, dummy_type_cublas_sprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_sprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1533,16 +1800,31 @@ void default_monitor_svdscublas_sprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_sprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_sprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_sprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1572,7 +1854,10 @@ int monitorFunSVDS_cublas_cprimme(dummy_type_sprimme *basisSvals, int basisSize,
       dummy_type_sprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_sprimme *lockedNorms,
       int inner_its, dummy_type_sprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_cprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_cprimme(dummy_type_cublas_cprimme *x, PRIMME_INT ldx, dummy_type_cublas_cprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_cprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1595,16 +1880,31 @@ void default_monitor_svdscublas_cprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_cprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_cprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_cprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1634,7 +1934,10 @@ int monitorFunSVDS_cublas_dprimme(dummy_type_dprimme *basisSvals, int basisSize,
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_dprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_dprimme(dummy_type_cublas_dprimme *x, PRIMME_INT ldx, dummy_type_cublas_dprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_dprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_dprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1657,16 +1960,31 @@ void default_monitor_svdscublas_dprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_dprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_dprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_dprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
@@ -1696,7 +2014,10 @@ int monitorFunSVDS_cublas_zprimme(dummy_type_dprimme *basisSvals, int basisSize,
       dummy_type_dprimme *lockedSvals, int numLocked, int *lockedFlags, dummy_type_dprimme *lockedNorms,
       int inner_its, dummy_type_dprimme LSRes, const char *msg, double time,
       primme_event event, int stage, double startTime, primme_context ctx);
-void matrixMatvec_eigs_cublas_zprimme(void *x_, PRIMME_INT *ldx, void *y_,
+int matrixMatvec_eigs_ctxcublas_zprimme(dummy_type_cublas_zprimme *x, PRIMME_INT ldx, dummy_type_cublas_zprimme *y,
+      PRIMME_INT ldy, int blockSize, primme_params *primme,
+      primme_context ctx);
+void matrixMatvec_eigs_cublas_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
 void applyPreconditioner_eigs_cublas_zprimme(void *x, PRIMME_INT *ldx, void *y,
       PRIMME_INT *ldy, int *blockSize, primme_params *primme, int *ierr);
@@ -1719,16 +2040,31 @@ void default_monitor_svdscublas_zprimme(void *basisSvals_, int *basisSize, int *
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, int *stage, primme_svds_params *primme_svds,
       int *err);
+int monitor_single_stage_ctxcublas_zprimme(void *basisEvals_, int *basisSize,
+      int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
+      int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
+      void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
+      double *time, primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_single_stagecublas_zprimme(void *basisEvals_, int *basisSize,
       int *basisFlags, int *iblock, int *blockSize, void *basisNorms_,
       int *numConverged, void *lockedEvals_, int *numLocked, int *lockedFlags,
       void *lockedNorms_, int *inner_its, void *LSRes_, const char *msg,
       double *time, primme_event *event, primme_params *primme, int *err);
+int monitor_stage1_ctxcublas_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage1cublas_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
       int *inner_its, void *LSRes_, const char *msg, double *time,
       primme_event *event, primme_params *primme, int *err);
+int monitor_stage2_ctxcublas_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
+      int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
+      void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
+      int *inner_its, void *LSRes_, const char *msg, double *time,
+      primme_event *event, primme_params *primme, primme_context ctx);
 void monitor_stage2cublas_zprimme(void *basisEvals_, int *basisSize, int *basisFlags,
       int *iblock, int *blockSize, void *basisNorms_, int *numConverged,
       void *lockedEvals_, int *numLocked, int *lockedFlags, void *lockedNorms_,
