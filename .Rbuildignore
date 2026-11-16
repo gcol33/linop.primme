@@ -10,3 +10,4 @@
 ^sidecars$
 ^\.run.*$
 ^CITATION\.cff$
+^cran-comments\.md$

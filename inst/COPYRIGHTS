@@ -1,0 +1,18 @@
+linop.primme bundles PRIMME 3.2.3 (PReconditioned Iterative MultiMethod
+Eigensolver), in src/primme/.
+
+  Copyright (c) 2017, 2018, 2020, College of William & Mary
+  Authors: Andreas Stathopoulos, Eloy Romero, Lingfei Wu
+  License: BSD 3-clause, full text in src/primme/COPYING.txt
+  Source: https://github.com/primme/primme
+
+The PRIMME sources are modified in three places:
+- src/primme/src/eigs/convergence.c: under LP_CONVTEST_DECIDES (set in
+  src/Makevars), the shortcut in check_convergence that flags a pair
+  converged without calling the convergence test is removed.
+- src/primme/src/eigs/primme_interface.c and
+  src/primme/src/svds/primme_svds_interface.c: the default outputFile is
+  NULL instead of stdout, so the library writes nothing to the console.
+
+The remaining files in src/ (init.c, bindings.c, lapack_ext.c) and the R code
+are Copyright (c) 2026, Gilles Colling, under the license in LICENSE.

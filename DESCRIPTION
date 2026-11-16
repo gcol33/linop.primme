@@ -1,6 +1,6 @@
 Package: linop.primme
 Title: The 'PRIMME' Eigensolver as a Compiled Engine for 'linop'
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: c(
     person("Gilles", "Colling", email = "gilles.colling051@gmail.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0003-3070-6066")),
@@ -14,8 +14,8 @@ Description: Bindings to the 'PRIMME' library (Stathopoulos and McCombs 2010,
     <doi:10.1145/1731022.1731031>; Wu, Romero and Stathopoulos 2017,
     <doi:10.1137/16M1082214>) for a few eigenpairs of a Hermitian operator and a
     few singular triplets of a rectangular one, both given only by their action.
-    'PRIMME' 3.2.3 is vendored and linked against R's own 'BLAS' and 'LAPACK'.
-    The package is the engine behind method = "primme" in the 'linop' package and
+    'PRIMME' 3.2.3 is vendored and linked against R's own Basic Linear Algebra
+    Subprograms ('BLAS') and 'LAPACK'. The package is the engine behind method = "primme" in the 'linop' package and
     exposes no interface of its own beyond the two calls 'linop' makes.
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
