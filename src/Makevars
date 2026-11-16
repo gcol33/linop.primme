@@ -4,7 +4,7 @@
 ## lp_zhegv in lapack_ext.c because R does not ship zhegv either.
 ##
 ## LP_CONVTEST_DECIDES removes one shortcut from check_convergence in
-## primme/src/eigs/convergence.c, the only change to PRIMME's sources: a pair
+## primme/src/eigs/convergence.c: a pair
 ## whose residual norm is at most the largest one already accepted is flagged
 ## converged without calling the convergence test. That holds for a test with
 ## one absolute threshold. The test here is relative to each pair's value, so a

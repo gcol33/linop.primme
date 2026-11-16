@@ -165,7 +165,7 @@ void primme_initialize(primme_params *primme) {
    primme->correctionParams.convTest           = primme_adaptive_ETolerance;
 
    /* Printing and reporting */
-   primme->outputFile                          = stdout;
+   primme->outputFile                          = NULL;
    primme->printLevel                          = 1;
    primme->stats.numOuterIterations            = 0; 
    primme->stats.numRestarts                   = 0;

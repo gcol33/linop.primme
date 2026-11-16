@@ -33,9 +33,9 @@ what produced the numbers you report. linop.primme supports:
   decided by the backward-error and residual bounds of linop’s eigenpair
   certificate.
 
-PRIMME 3.2.3 is included unchanged except for one shortcut in its
-convergence check, which is compiled out so that linop’s convergence
-test decides every pair. The tests check both engines against
+PRIMME 3.2.3 has its default C output streams disabled and its convergence
+shortcut compiled out so that linop’s convergence test decides every pair.
+The tests check both engines against
 closed-form spectra, real and complex.
 
 ## Installation

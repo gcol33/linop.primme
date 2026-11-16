@@ -22,8 +22,8 @@ test_that("real hermitian: every target reaches the closed-form spectrum", {
     f <- primme_eigsh(lap_apply(n), n, 4, which = w, tol = 1e-12)
     expect_identical(f$info, 0L)
     expect_identical(f$nconv, 4L)
-    expect_lt(max(abs(sort(f$values) - sort(want[[w]]))), 1e-12)
-    R <- lap_apply(n)(f$vectors) - f$vectors %*% diag(f$values)
+    expect_lt(max(abs(f$values - want[[w]])), 1e-12)
+    R <- lap_apply(n)(f$vectors) - sweep(f$vectors, 2L, want[[w]], "*")
     expect_lt(max(sqrt(colSums(R^2))), 1e-10)
   }
 })
@@ -41,6 +41,8 @@ test_that("complex hermitian, with and without the block path that calls zhegv",
     expect_identical(f$params$orthExplicit, b > 1L)
     expect_identical(f$info, 0L)
     expect_lt(max(abs(f$values - rev(lam)[1:3])), 1e-12)
+    residual <- H %*% f$vectors - sweep(f$vectors, 2L, rev(lam)[1:3], "*")
+    expect_lt(max(sqrt(colSums(Mod(residual)^2))), 1e-10)
     expect_true(is.complex(f$vectors))
   }
 })

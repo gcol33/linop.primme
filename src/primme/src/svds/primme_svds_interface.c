@@ -149,7 +149,7 @@ void primme_svds_initialize(primme_svds_params *primme_svds) {
    primme_svds->maxBlockSize            = 0;
    primme_svds->maxMatvecs              = INT_MAX;
    primme_svds->printLevel              = 1;
-   primme_svds->outputFile              = stdout;
+   primme_svds->outputFile              = NULL;
    primme_svds->locking                 = -1;
    primme_svds->numOrthoConst           = 0;
 
