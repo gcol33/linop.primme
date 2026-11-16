@@ -28,6 +28,7 @@
 #endif
 
 #include <complex.h>
+#include <stddef.h>
 #include <Rconfig.h>
 
 /* Declared exactly as PRIMME's blaslapack_private.h declares them for double

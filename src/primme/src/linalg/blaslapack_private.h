@@ -122,6 +122,7 @@
 #       define BLASSCALAR Rcomplex
 #   endif
 #else
+#   include <stddef.h>
 #   include <Rconfig.h>
 #   define BLASSCALAR SCALAR
 #   define STRING_LEN1 , (FC_LEN_T)1
