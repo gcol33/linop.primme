@@ -1060,7 +1060,7 @@ int Num_heev_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
          &dummyr,
 #  endif
-         iwork, ifail, &linfo);
+         iwork, ifail, &linfo STRING_LEN1 STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
    // ATLAS LAPACK and MacOS LAPACK may suggest a wrong value to lwork for n=1
    if (lldwork < 2 * ln) lldwork = 2 * ln;
@@ -1073,7 +1073,7 @@ int Num_heev_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
             rwork,
 #  endif
-            iwork, ifail, &linfo);
+            iwork, ifail, &linfo STRING_LEN1 STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1117,7 +1117,7 @@ int Num_heev_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #     ifdef USE_COMPLEX
          rwork,
 #     endif
-         &linfo); 
+         &linfo STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
@@ -1127,7 +1127,7 @@ int Num_heev_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #     ifdef USE_COMPLEX
             rwork,
 #     endif
-            &linfo); 
+            &linfo STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1203,7 +1203,7 @@ int Num_hegv_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
          rwork,
 #  endif
-         iwork, ifail, &linfo);
+         iwork, ifail, &linfo STRING_LEN1 STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
@@ -1214,7 +1214,7 @@ int Num_hegv_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
             rwork,
 #  endif
-            iwork, ifail, &linfo);
+            iwork, ifail, &linfo STRING_LEN1 STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1265,7 +1265,7 @@ int Num_hegv_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
          rwork,
 #  endif
-         &linfo);
+         &linfo STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
@@ -1275,7 +1275,7 @@ int Num_hegv_Sprimme(const char *jobz, const char *uplo, PRIMME_INT n,
 #  ifdef USE_COMPLEX
             rwork,
 #  endif
-            &linfo);
+            &linfo STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1322,14 +1322,14 @@ int Num_gees_Sprimme(const char *jobvs, PRIMME_INT n, SCALAR *a, PRIMME_INT lda,
    lldwork = -1;
    SCALAR lwork0 = 0;
    XGEES(jobvs, "N", NULL, &ln, a, &llda, &lsdim, w, vs, &lldvs, &lwork0,
-         &lldwork, rwork, &dummyi, &linfo);
+         &lldwork, rwork, &dummyi, &linfo STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
       SCALAR *work = NULL;
       CHKERR(Num_malloc_Sprimme(lldwork, &work, ctx));
       XGEES(jobvs, "N", NULL, &ln, a, &llda, &lsdim, w, vs, &lldvs, work,
-            &lldwork, rwork, &dummyi, &linfo);
+            &lldwork, rwork, &dummyi, &linfo STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1375,7 +1375,7 @@ int Num_gesvd_Sprimme(const char *jobu, const char *jobvt, PRIMME_INT m,
 #ifdef USE_COMPLEX
           &dummyr,
 #endif
-         &linfo);
+         &linfo STRING_LEN1 STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
@@ -1390,7 +1390,7 @@ int Num_gesvd_Sprimme(const char *jobu, const char *jobvt, PRIMME_INT m,
 #ifdef USE_COMPLEX
             rwork,
 #endif
-            &linfo);
+            &linfo STRING_LEN1 STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
 #  ifdef USE_COMPLEX
       CHKERR(Num_free_Rprimme(rwork, ctx));
@@ -1434,13 +1434,13 @@ int Num_hetrf_Sprimme(const char *uplo, PRIMME_INT n, SCALAR *a, PRIMME_INT lda,
    
    lldwork = -1;
    SCALAR lwork0 = 0;
-   XHETRF(uplo, &ln, a, &llda, lipivot, &lwork0, &lldwork, &linfo);
+   XHETRF(uplo, &ln, a, &llda, lipivot, &lwork0, &lldwork, &linfo STRING_LEN1);
    lldwork = REAL_PART(lwork0);
 
    if (linfo == 0) {
       SCALAR *work;
       CHKERR(Num_malloc_Sprimme(lldwork, &work, ctx));
-      XHETRF(uplo, &ln, a, &llda, lipivot, work, &lldwork, &linfo);
+      XHETRF(uplo, &ln, a, &llda, lipivot, work, &lldwork, &linfo STRING_LEN1);
       CHKERR(Num_free_Sprimme(work, ctx));
    }
 
@@ -1520,7 +1520,7 @@ int Num_hetrs_Sprimme(const char *uplo, PRIMME_INT n, PRIMME_INT nrhs,
    }
 
 #ifndef USE_ZGESV
-   XHETRS(uplo, &ln, &lnrhs, a, &llda, lipivot, b, &lldb, &linfo);
+   XHETRS(uplo, &ln, &lnrhs, a, &llda, lipivot, b, &lldb, &linfo STRING_LEN1);
    CHKERRM(linfo != 0, PRIMME_LAPACK_FAILURE, "Error in xhetrs with info %d",
           (int)linfo);
 #else /* USE_ZGESV */
@@ -1560,7 +1560,7 @@ int Num_potrf_Sprimme(const char *uplo, PRIMME_INT n, SCALAR *a, PRIMME_INT lda,
       return 0;
    }
 
-   XPOTRF(uplo, &ln, a, &llda, &linfo);
+   XPOTRF(uplo, &ln, a, &llda, &linfo STRING_LEN1);
    CHKERRM(info == NULL && linfo != 0, PRIMME_LAPACK_FAILURE,
          "Error in xpotrf with info %d\n", (int)linfo);
    if (info) *info = (int)linfo;
@@ -1697,7 +1697,7 @@ int Num_getrs_Sprimme(const char *trans, PRIMME_INT n, PRIMME_INT nrhs,
       lipivot = (PRIMME_BLASINT *)ipivot; /* cast avoid compiler warning */
    }
 
-   XGETRS(trans, &ln, &lnrhs, a, &llda, lipivot, b, &lldb, &linfo);
+   XGETRS(trans, &ln, &lnrhs, a, &llda, lipivot, b, &lldb, &linfo STRING_LEN1);
 
    if (sizeof(int) != sizeof(PRIMME_BLASINT)) {
       free(lipivot);

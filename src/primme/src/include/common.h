@@ -259,6 +259,7 @@ typedef struct { PRIMME_COMPLEX_QUAD a; }  dummy_type_cublas_wprimme;
 #define MEM_POP_FRAME(ERRN) { \
    if (*(ERRN)) {\
       Mem_pop_clean_frame(ctx);\
+      ctx.mm = __frame.prev;\
    } else {\
       Mem_debug_frame(__FILE__ ": " STR(__LINE__), ctx);\
       if (Mem_pop_frame(&ctx)) { \
@@ -272,6 +273,7 @@ typedef struct { PRIMME_COMPLEX_QUAD a; }  dummy_type_cublas_wprimme;
 #define MEM_POP_FRAME(ERRN) { \
    if (*(ERRN)) {\
       Mem_pop_clean_frame(ctx);\
+      ctx.mm = __frame.prev;\
    } else {\
       if (Mem_pop_frame(&ctx)) { \
          Mem_pop_clean_frame(ctx); \

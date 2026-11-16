@@ -27,26 +27,34 @@
 #undef zhegv_
 #endif
 
-#define USE_FC_LEN_T
-#include <R.h>
-#include <R_ext/BLAS.h>
-#include <R_ext/Lapack.h>
-#include <R_ext/Complex.h>
-#ifndef FCONE
-#define FCONE
-#endif
+#include <complex.h>
+#include <Rconfig.h>
 
-void lp_zhegv(const int *itype, const char *jobz, const char *uplo,
-              const int *n, Rcomplex *a, const int *lda, Rcomplex *b,
-              const int *ldb, double *w, Rcomplex *work, const int *lwork,
-              double *rwork, int *info)
+/* Declared exactly as PRIMME's blaslapack_private.h declares them for double
+   complex, with Fortran's hidden character lengths, so every declaration of a
+   symbol in the package agrees. */
+typedef double complex lp_complex;
+void zpotrf_(const char *uplo, int *n, lp_complex *a, int *lda, int *info,
+             FC_LEN_T);
+void zheev_(const char *jobz, const char *uplo, int *n, lp_complex *a, int *lda,
+            double *w, lp_complex *work, int *ldwork, double *rwork, int *info,
+            FC_LEN_T, FC_LEN_T);
+void ztrsm_(const char *side, const char *uplo, const char *transa,
+            const char *diag, int *m, int *n, lp_complex *alpha, lp_complex *a,
+            int *lda, lp_complex *b, int *ldb, FC_LEN_T, FC_LEN_T, FC_LEN_T,
+            FC_LEN_T);
+
+void lp_zhegv(int *itype, const char *jobz, const char *uplo, int *n,
+              lp_complex *a, int *lda, lp_complex *b, int *ldb, double *w,
+              lp_complex *work, int *lwork, double *rwork, int *info,
+              FC_LEN_T jobz_len, FC_LEN_T uplo_len)
 {
   const int N = *n;
   const int upper = (*uplo == 'U' || *uplo == 'u');
   const int wantz = (*jobz == 'V' || *jobz == 'v');
-  Rcomplex one;
-  one.r = 1.0;
-  one.i = 0.0;
+  lp_complex one = 1.0;
+  (void)jobz_len;
+  (void)uplo_len;
   int nn = *n, la = *lda, lb = *ldb;
 
   *info = 0;
@@ -61,8 +69,7 @@ void lp_zhegv(const int *itype, const char *jobz, const char *uplo,
   /* Workspace query: the reduction itself needs none, so the requirement is
      zheev's. */
   if (*lwork == -1) {
-    F77_CALL(zheev)(jobz, uplo, n, a, lda, w, work, lwork, rwork, info
-                    FCONE FCONE);
+    zheev_(jobz, uplo, n, a, lda, w, work, lwork, rwork, info, 1, 1);
     return;
   }
   if (N == 0) return;
@@ -70,48 +77,36 @@ void lp_zhegv(const int *itype, const char *jobz, const char *uplo,
   /* B = U^H U or L L^H. A failure at column i means B is not positive
      definite, which LAPACK reports as n + i. */
   int pinfo = 0;
-  F77_CALL(zpotrf)(uplo, n, b, ldb, &pinfo FCONE);
+  zpotrf_(uplo, n, b, ldb, &pinfo, 1);
   if (pinfo > 0) { *info = N + pinfo; return; }
   if (pinfo < 0) { *info = pinfo; return; }
 
   /* The full Hermitian A from the triangle that holds it. */
   const int LDA = *lda;
   for (int j = 0; j < N; j++) {
-    a[j + (size_t)j * LDA].i = 0.0;
+    a[j + (size_t)j * LDA] = creal(a[j + (size_t)j * LDA]);
     for (int i = j + 1; i < N; i++) {
-      if (upper) {
-        a[i + (size_t)j * LDA].r =  a[j + (size_t)i * LDA].r;
-        a[i + (size_t)j * LDA].i = -a[j + (size_t)i * LDA].i;
-      } else {
-        a[j + (size_t)i * LDA].r =  a[i + (size_t)j * LDA].r;
-        a[j + (size_t)i * LDA].i = -a[i + (size_t)j * LDA].i;
-      }
+      if (upper) a[i + (size_t)j * LDA] = conj(a[j + (size_t)i * LDA]);
+      else a[j + (size_t)i * LDA] = conj(a[i + (size_t)j * LDA]);
     }
   }
 
   /* C = U^-H A U^-1, or L^-1 A L^-H. */
   if (upper) {
-    F77_CALL(ztrsm)("L", "U", "C", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
-    F77_CALL(ztrsm)("R", "U", "N", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
+    ztrsm_("L", "U", "C", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
+    ztrsm_("R", "U", "N", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
   } else {
-    F77_CALL(ztrsm)("L", "L", "N", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
-    F77_CALL(ztrsm)("R", "L", "C", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
+    ztrsm_("L", "L", "N", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
+    ztrsm_("R", "L", "C", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
   }
 
-  F77_CALL(zheev)(jobz, uplo, n, a, lda, w, work, lwork, rwork, info
-                  FCONE FCONE);
+  zheev_(jobz, uplo, n, a, lda, w, work, lwork, rwork, info, 1, 1);
   if (*info != 0 || !wantz) return;
 
   /* x = U^-1 y, or L^-H y. */
   if (upper) {
-    F77_CALL(ztrsm)("L", "U", "N", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
+    ztrsm_("L", "U", "N", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
   } else {
-    F77_CALL(ztrsm)("L", "L", "C", "N", &nn, &nn, &one, b, &lb, a, &la
-                    FCONE FCONE FCONE FCONE);
+    ztrsm_("L", "L", "C", "N", &nn, &nn, &one, b, &lb, a, &la, 1, 1, 1, 1);
   }
 }
