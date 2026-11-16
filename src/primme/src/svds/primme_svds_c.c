@@ -50,6 +50,15 @@
 
 #ifdef SUPPORTED_TYPE
 
+/* Every function in this file that checks an error with CHKERRA holds a
+   context from primme_svds_get_context, whose frame has to be popped on the
+   error return as on the normal one. */
+
+#ifndef CHKERRA_CTX
+#define CHKERRA_CTX(ERRN, ACTION) \
+   CHKERRA(ERRN, ACTION; primme_svds_free_context(ctx))
+#endif
+
 #define UPDATE_STATS(PRIMME_SVDS_STATS, OP, PRIMME_STATS) {\
    (PRIMME_SVDS_STATS).numOuterIterations OP  (PRIMME_STATS).numOuterIterations;\
    (PRIMME_SVDS_STATS).numRestarts        OP  (PRIMME_STATS).numRestarts       ;\
@@ -1334,7 +1343,7 @@ void matrixMatvec_eigs_Sprimme(void *x_, PRIMME_INT *ldx, void *y_,
 
    switch(method) {
       case primme_svds_op_AtA:
-         CHKERRA(Num_malloc_Sprimme(primme_svds->mLocal *
+         CHKERRA_CTX(Num_malloc_Sprimme(primme_svds->mLocal *
                                           min(primme->maxBlockSize, *blockSize),
                        &aux, ctx),
                *ierr = 1);
@@ -1343,15 +1352,15 @@ void matrixMatvec_eigs_Sprimme(void *x_, PRIMME_INT *ldx, void *y_,
          {
             primme_svds->matrixMatvec(&x[*ldx * i], ldx, aux,
                   &primme_svds->mLocal, &bs, &notrans, primme_svds, ierr);
-            CHKERRA(*ierr, /* do nothing */);
+            CHKERRA_CTX(*ierr, /* do nothing */);
             primme_svds->matrixMatvec(aux, &primme_svds->mLocal,
                   &y[*ldy*i], ldy, &bs, &trans, primme_svds, ierr);
-            CHKERRA(*ierr, /* do nothing */);
+            CHKERRA_CTX(*ierr, /* do nothing */);
          }
-         CHKERRA(Num_free_Sprimme(aux, ctx), *ierr = 1);
+         CHKERRA_CTX(Num_free_Sprimme(aux, ctx), *ierr = 1);
          break;
       case primme_svds_op_AAt:
-         CHKERRA(Num_malloc_Sprimme(primme_svds->nLocal *
+         CHKERRA_CTX(Num_malloc_Sprimme(primme_svds->nLocal *
                                           min(primme->maxBlockSize, *blockSize),
                        &aux, ctx),
                *ierr = 1);
@@ -1360,20 +1369,20 @@ void matrixMatvec_eigs_Sprimme(void *x_, PRIMME_INT *ldx, void *y_,
          {
             primme_svds->matrixMatvec(&x[*ldx*i], ldx, aux,
                   &primme_svds->nLocal, &bs, &trans, primme_svds, ierr);
-            CHKERRA(*ierr, /* do nothing */);
+            CHKERRA_CTX(*ierr, /* do nothing */);
             primme_svds->matrixMatvec(aux, &primme_svds->nLocal,
                   &y[*ldy*i], ldy, &bs, &notrans, primme_svds, ierr);
-            CHKERRA(*ierr, /* do nothing */);
+            CHKERRA_CTX(*ierr, /* do nothing */);
          }
-         CHKERRA(Num_free_Sprimme(aux, ctx), *ierr = 1);
+         CHKERRA_CTX(Num_free_Sprimme(aux, ctx), *ierr = 1);
          break;
       case primme_svds_op_augmented:
          primme_svds->matrixMatvec(&x[primme_svds->nLocal], ldx, y, ldy, blockSize,
                &trans, primme_svds, ierr);
-         CHKERRA(*ierr, /* do nothing */);
+         CHKERRA_CTX(*ierr, /* do nothing */);
          primme_svds->matrixMatvec(x, ldx, &y[primme_svds->nLocal],
                ldy, blockSize, &notrans, primme_svds, ierr);
-         CHKERRA(*ierr, /* do nothing */);
+         CHKERRA_CTX(*ierr, /* do nothing */);
          break;
       case primme_svds_op_none:
          break;
@@ -1611,7 +1620,7 @@ STATIC void default_convTestFun(double *sval, void *leftsvec_, void *rightsvec_,
 
       HREAL rnorm;
       primme_context ctx = primme_svds_get_context(primme_svds);
-      CHKERRA(compute_resNorm(leftsvec, rightsvec, &rnorm, ctx), *ierr = 1);
+      CHKERRA_CTX(compute_resNorm(leftsvec, rightsvec, &rnorm, ctx), *ierr = 1);
       primme_svds_free_context(ctx);
 
       *isConv = rnorm < max(primme_svds->eps, MACHINE_EPSILON * 3.16) * aNorm;
@@ -1652,12 +1661,13 @@ STATIC void convTestFunATA(double *eval, void *evec, double *rNorm, int *isConv,
 
    double maxaNorm = max(primme->aNorm, primme->stats.estimateLargestSVal);
    double eps_matvec = MACHINE_EPSILON;
-   CHKERRA(Num_machine_epsilon_Sprimme(
+   CHKERRA_CTX(Num_machine_epsilon_Sprimme(
                  primme_svds->matrixMatvec_type, &eps_matvec),
          *ierr = 1);
    if (rNorm && *rNorm < eps_matvec * maxaNorm * 3.16) {
       *isConv = 1;
       *ierr = 0;
+      primme_svds_free_context(ctx);
       return;
    }
 
@@ -1671,7 +1681,7 @@ STATIC void convTestFunATA(double *eval, void *evec, double *rNorm, int *isConv,
 
    double sval = eval ? sqrt(fabs(*eval)) : 0.0;
    double srNorm = (rNorm && eval) ? *rNorm / sval : 0.0;
-   CHKERRA(convTestFunSVDS_Sprimme(sval,
+   CHKERRA_CTX(convTestFunSVDS_Sprimme(sval,
                  (method == primme_svds_op_AAt && evec) ? (SCALAR *)evec : NULL,
                  method == primme_svds_op_AAt,
                  (method == primme_svds_op_AtA && evec) ? (SCALAR *)evec : NULL,
@@ -1728,7 +1738,7 @@ STATIC void convTestFunAug(double *eval, void *evec, double *rNorm, int *isConv,
 
    double sval = eval ? fabs(*eval) : 0.0;
    double srNorm = rNorm ? *rNorm * sqrt(2.0) : 0.0;
-   CHKERRA(convTestFunSVDS_Sprimme(sval,
+   CHKERRA_CTX(convTestFunSVDS_Sprimme(sval,
                  evec ? &((SCALAR *)evec)[primme_svds->nLocal] : NULL,
                  1 /* vector given */, (SCALAR *)evec, 1 /* vector given */,
                  srNorm, method, isConv, ctx),
@@ -1911,16 +1921,16 @@ STATIC void monitor_single_stage(void *basisEvals_, int *basisSize,
 
    HREAL *basisSvals, *basisSVNorms, *lockedSvals, *lockedSVNorms;
 
-   CHKERRA(Num_malloc_RHprimme(
+   CHKERRA_CTX(Num_malloc_RHprimme(
                  basisEvals && basisSize ? *basisSize : 0, &basisSvals, ctx),
          *err = 1);
-   CHKERRA(Num_malloc_RHprimme(
+   CHKERRA_CTX(Num_malloc_RHprimme(
                  basisEvals && basisSize ? *basisSize : 0, &basisSVNorms, ctx),
          *err = 1);
-   CHKERRA(Num_malloc_RHprimme(
+   CHKERRA_CTX(Num_malloc_RHprimme(
                  lockedEvals && numLocked ? *numLocked : 0, &lockedSvals, ctx),
          *err = 1);
-   CHKERRA(Num_malloc_RHprimme(lockedEvals && numLocked ? *numLocked : 0,
+   CHKERRA_CTX(Num_malloc_RHprimme(lockedEvals && numLocked ? *numLocked : 0,
                  &lockedSVNorms, ctx),
          *err = 1);
 
@@ -1982,7 +1992,7 @@ STATIC void monitor_single_stage(void *basisEvals_, int *basisSize,
 
    /* Call the user function report */
 
-   CHKERRA(monitorFunSVDS_Sprimme(basisSvals, basisSize ? *basisSize : 0,
+   CHKERRA_CTX(monitorFunSVDS_Sprimme(basisSvals, basisSize ? *basisSize : 0,
                  basisFlags, iblock, blockSize ? *blockSize : 0, basisSVNorms,
                  numConverged ? *numConverged : 0, lockedSvals,
                  numLocked ? *numLocked : 0, lockedFlags, lockedSVNorms,
@@ -1992,10 +2002,10 @@ STATIC void monitor_single_stage(void *basisEvals_, int *basisSize,
          *err = 1);
    primme_svds->stats = stats; /* restore original values */
 
-   CHKERRA(Num_free_RHprimme(basisSvals, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(lockedSvals, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(lockedSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(lockedSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(lockedSVNorms, ctx), *err = 1);
    if (new_msg) free(new_msg);
    primme_svds_free_context(ctx);
 }
@@ -2061,10 +2071,10 @@ STATIC void monitor_stage1(void *basisEvals_, int *basisSize, int *basisFlags,
    int basisSize0 = (basisEvals&&basisSize?*basisSize:0) + numLocked0;
    HREAL *basisSvals = NULL, *basisSVNorms = NULL;
    int *basisSVFlags = NULL, *iblockSV = NULL;
-   CHKERRA(Num_malloc_RHprimme(basisSize0, &basisSvals, ctx), *err = 1);
-   CHKERRA(Num_malloc_RHprimme(basisSize0, &basisSVNorms, ctx), *err = 1);
-   CHKERRA(Num_malloc_iprimme(basisSize0, &basisSVFlags, ctx), *err = 1);
-   CHKERRA(Num_malloc_iprimme(
+   CHKERRA_CTX(Num_malloc_RHprimme(basisSize0, &basisSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_RHprimme(basisSize0, &basisSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_iprimme(basisSize0, &basisSVFlags, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_iprimme(
                  blockSize && *blockSize > 0 ? *blockSize : 1, &iblockSV, ctx),
          *err = 1);
    int numConvergedSV = (numConverged?*numConverged:numLocked0);
@@ -2121,7 +2131,7 @@ STATIC void monitor_stage1(void *basisEvals_, int *basisSize, int *basisFlags,
 
    /* Call the user function report */
 
-   CHKERRA(
+   CHKERRA_CTX(
          monitorFunSVDS_Sprimme(basisSvals, basisSize0, basisSVFlags, iblockSV,
                blockSize ? *blockSize : 0, basisSVNorms, numConvergedSV, NULL,
                0, NULL, NULL, inner_its ? *inner_its : 0, LSRes ? *LSRes : 0.0,
@@ -2130,10 +2140,10 @@ STATIC void monitor_stage1(void *basisEvals_, int *basisSize, int *basisFlags,
          *err = 1);
    primme_svds->stats = stats; /* restore original values */
 
-   CHKERRA(Num_free_RHprimme(basisSvals, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
-   CHKERRA(Num_free_iprimme(basisSVFlags, ctx), *err = 1);
-   CHKERRA(Num_free_iprimme(iblockSV, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_iprimme(basisSVFlags, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_iprimme(iblockSV, ctx), *err = 1);
    if (new_msg) free(new_msg);
    primme_svds_free_context(ctx);
 }
@@ -2190,11 +2200,11 @@ STATIC void monitor_stage2(void *basisEvals_, int *basisSize, int *basisFlags,
    int basisSize0 = (basisEvals&&basisSize?*basisSize:0);
    HREAL *basisSvals, *basisSVNorms, *lockedSvals, *lockedSVNorms;
    int *lockedSVFlags;
-   CHKERRA(Num_malloc_RHprimme(basisSize0, &basisSvals, ctx), *err = 1);
-   CHKERRA(Num_malloc_RHprimme(basisSize0, &basisSVNorms, ctx), *err = 1);
-   CHKERRA(Num_malloc_RHprimme(numLockedSV, &lockedSvals, ctx), *err = 1);
-   CHKERRA(Num_malloc_RHprimme(numLockedSV, &lockedSVNorms, ctx), *err = 1);
-   CHKERRA(Num_malloc_iprimme(numLockedSV, &lockedSVFlags, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_RHprimme(basisSize0, &basisSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_RHprimme(basisSize0, &basisSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_RHprimme(numLockedSV, &lockedSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_RHprimme(numLockedSV, &lockedSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_malloc_iprimme(numLockedSV, &lockedSVFlags, ctx), *err = 1);
 
    /* SVrnorm = rnorm/sqrt(2) */
 
@@ -2240,7 +2250,7 @@ STATIC void monitor_stage2(void *basisEvals_, int *basisSize, int *basisFlags,
 
    /* Call the user function report */
 
-   CHKERRA(monitorFunSVDS_Sprimme(basisSvals, basisSize0,
+   CHKERRA_CTX(monitorFunSVDS_Sprimme(basisSvals, basisSize0,
                  basisFlags, iblock, blockSize ? *blockSize : 0, basisSVNorms,
                  numConverged ? *numConverged : 0, lockedSvals, numLockedSV,
                  lockedSVFlags, lockedSVNorms, inner_its ? *inner_its : 0,
@@ -2249,11 +2259,11 @@ STATIC void monitor_stage2(void *basisEvals_, int *basisSize, int *basisFlags,
          *err = 1);
    primme_svds->stats = stats; /* restore original values */
 
-   CHKERRA(Num_free_RHprimme(basisSvals, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(lockedSvals, ctx), *err = 1);
-   CHKERRA(Num_free_RHprimme(lockedSVNorms, ctx), *err = 1);
-   CHKERRA(Num_free_iprimme(lockedSVFlags, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(basisSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(lockedSvals, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_RHprimme(lockedSVNorms, ctx), *err = 1);
+   CHKERRA_CTX(Num_free_iprimme(lockedSVFlags, ctx), *err = 1);
    if (new_msg) free(new_msg);
    primme_svds_free_context(ctx);
 }

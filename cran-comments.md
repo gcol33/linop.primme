@@ -3,7 +3,7 @@
 linop.primme vendors the 'PRIMME' eigensolver library (BSD 3-clause,
 College of William & Mary) in `src/primme/`. Its copyright holders and authors
 are in `Authors@R`, and `inst/COPYRIGHTS` lists them together with the
-five local changes to the 'PRIMME' sources. 'PRIMME' is linked against R's own
+local changes to the 'PRIMME' sources. 'PRIMME' is linked against R's own
 'BLAS' and 'LAPACK'; `zhegv`, which R's 'LAPACK' does not include, is
 implemented in `src/lapack_ext.c` from routines R does ship.
 

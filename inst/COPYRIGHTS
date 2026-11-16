@@ -11,6 +11,10 @@ The PRIMME sources are modified in these places:
   frame pointer when the call it wraps returned an error. Without it the
   context keeps pointing at a stack frame that has gone out of scope, which
   AddressSanitizer reports as stack-use-after-scope in Mem_pop_frame.
+- src/primme/src/svds/primme_svds_c.c: the functions that take a context
+  from primme_svds_get_context free it on every return, including error
+  returns and the early return in convTestFunATA. Without it the context's
+  frame is never freed, which valgrind reports as definitely lost.
 - src/primme/src/linalg/blaslapack_private.h and blaslapack.c: every 'BLAS'
   and 'LAPACK' routine taking a character argument is declared and called
   with Fortran's hidden character lengths (FC_LEN_T), as R requires.

@@ -27,14 +27,11 @@
 #undef zhegv_
 #endif
 
-#include <complex.h>
-#include <stddef.h>
-#include <Rconfig.h>
+#include "lapack_ext.h"
 
 /* Declared exactly as PRIMME's blaslapack_private.h declares them for double
    complex, with Fortran's hidden character lengths, so every declaration of a
    symbol in the package agrees. */
-typedef double complex lp_complex;
 void zpotrf_(const char *uplo, int *n, lp_complex *a, int *lda, int *info,
              FC_LEN_T);
 void zheev_(const char *jobz, const char *uplo, int *n, lp_complex *a, int *lda,

@@ -21,6 +21,7 @@
 #include <math.h>
 #include <float.h>
 #include "primme.h"
+#include "lapack_ext.h"
 
 typedef struct {
   SEXP fn;          /* the operator: function(X) or function(X, trans) */
@@ -486,29 +487,25 @@ SEXP lp_svds(SEXP fn, SEXP env, SEXP s_m, SEXP s_n, SEXP s_k, SEXP s_target,
   return out;
 }
 
-void lp_zhegv(const int *itype, const char *jobz, const char *uplo,
-              const int *n, Rcomplex *a, const int *lda, Rcomplex *b,
-              const int *ldb, double *w, Rcomplex *work, const int *lwork,
-              double *rwork, int *info);
-
 /* Direct access to lp_zhegv, so its contract can be tested on its own. */
 SEXP lp_zhegv_call(SEXP A, SEXP B, SEXP s_uplo)
 {
-  const int n = Rf_nrows(A);
+  int n = Rf_nrows(A);
   const char *uplo = CHAR(STRING_ELT(s_uplo, 0));
   SEXP a = PROTECT(Rf_duplicate(A));
   SEXP b = PROTECT(Rf_duplicate(B));
   SEXP w = PROTECT(Rf_allocVector(REALSXP, n));
+  lp_complex *pa = (lp_complex *)COMPLEX(a), *pb = (lp_complex *)COMPLEX(b);
   int one = 1, lwork = -1, info = 0;
-  Rcomplex q;
+  lp_complex q;
   double *rwork = (double *)R_alloc(3 * (size_t)(n > 0 ? n : 1), sizeof(double));
-  lp_zhegv(&one, "V", uplo, &n, COMPLEX(a), &n, COMPLEX(b), &n, REAL(w), &q,
-           &lwork, rwork, &info);
-  lwork = (int)q.r;
+  lp_zhegv(&one, "V", uplo, &n, pa, &n, pb, &n, REAL(w), &q, &lwork, rwork,
+           &info, 1, 1);
+  lwork = (int)creal(q);
   if (lwork < 1) lwork = 1;
-  Rcomplex *work = (Rcomplex *)R_alloc((size_t)lwork, sizeof(Rcomplex));
-  lp_zhegv(&one, "V", uplo, &n, COMPLEX(a), &n, COMPLEX(b), &n, REAL(w), work,
-           &lwork, rwork, &info);
+  lp_complex *work = (lp_complex *)R_alloc((size_t)lwork, sizeof(lp_complex));
+  lp_zhegv(&one, "V", uplo, &n, pa, &n, pb, &n, REAL(w), work, &lwork, rwork,
+           &info, 1, 1);
   const char *nm[] = {"values", "vectors", "info", ""};
   SEXP out = PROTECT(Rf_mkNamed(VECSXP, nm));
   SET_VECTOR_ELT(out, 0, w);
