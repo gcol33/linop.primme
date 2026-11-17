@@ -18,9 +18,9 @@ Description: Bindings to the PReconditioned Iterative MultiMethod Eigensolver
     one, both given only by their action. The source of 'PRIMME' 3.2.3 is
     included in the package and linked against the Basic Linear Algebra
     Subprograms ('BLAS') and Linear Algebra Package ('LAPACK') that R itself
-    uses. The package is
-    the engine behind method = "primme" in the 'linop' package and exposes no
-    interface of its own beyond the two calls 'linop' makes.
+    uses. The package is the engine behind method = "primme" in the 'linop'
+    package and exposes no interface of its own beyond the two calls 'linop'
+    makes.
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.4.0)
