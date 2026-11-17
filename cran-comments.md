@@ -23,4 +23,9 @@ after this one), which will list it in Suggests.
 
 ## Test environments
 
-<!-- filled from the win-builder and R-hub results before submission -->
+* win-builder, R-devel (2026-11-16 r90914 ucrt): 1 NOTE (above), check time 89 s
+* win-builder, R 4.6.2 (2026-10-29 ucrt): 1 NOTE (above), check time 42 s
+* local Windows 11, R 4.6.0: `R CMD check --as-cran`, 1 NOTE (new submission)
+* GitHub Actions, R release on macos-latest (arm64), windows-latest and
+  ubuntu-latest: OK
+* R-hub, gcc-asan, clang-asan, clang-ubsan and valgrind: OK
