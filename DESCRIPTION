@@ -13,9 +13,10 @@ Authors@R: c(
 Description: Bindings to the PReconditioned Iterative MultiMethod Eigensolver
     library 'PRIMME' (Stathopoulos and McCombs 2010,
     <doi:10.1145/1731022.1731031>; Wu, Romero and Stathopoulos 2017,
-    <doi:10.1137/16M1082214>) for a few eigenpairs of a Hermitian operator and a
-    few singular triplets of a rectangular one, both given only by their action.
-    'PRIMME' 3.2.3 is vendored and linked against the Basic Linear Algebra
+    <doi:10.1137/16M1082214>) for a few eigenvalues and eigenvectors of a
+    Hermitian operator and a few singular values and vectors of a rectangular
+    one, both given only by their action. The source of 'PRIMME' 3.2.3 is
+    included in the package and linked against the Basic Linear Algebra
     Subprograms ('BLAS') and Linear Algebra Package ('LAPACK') that R itself
     uses. The package is
     the engine behind method = "primme" in the 'linop' package and exposes no

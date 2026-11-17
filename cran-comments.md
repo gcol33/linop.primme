@@ -17,8 +17,9 @@ after this one), which will list it in Suggests.
 * This is a new release.
 * Possibly misspelled words in DESCRIPTION: 'PReconditioned', 'MultiMethod'
   and 'Eigensolver' are the library's name as its authors spell it
-  (PReconditioned Iterative MultiMethod Eigensolver), and 'McCombs' is the
-  second author of the cited paper.
+  (PReconditioned Iterative MultiMethod Eigensolver); 'Stathopoulos' and
+  'McCombs' are authors of the cited papers; 'primme' is the value of the
+  'linop' argument `method = "primme"`.
 
 ## Test environments
 
