@@ -15,6 +15,10 @@ after this one), which will list it in Suggests.
 0 errors | 0 warnings | 1 note
 
 * This is a new release.
+* Possibly misspelled words in DESCRIPTION: 'PReconditioned', 'MultiMethod'
+  and 'Eigensolver' are the library's name as its authors spell it
+  (PReconditioned Iterative MultiMethod Eigensolver), and 'McCombs' is the
+  second author of the cited paper.
 
 ## Test environments
 
